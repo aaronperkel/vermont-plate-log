@@ -358,6 +358,11 @@ function seasonOf(month: string): string {
   return `${SEASONS[Number(month.split('-')[1]) - 1]} ${month.split('-')[0]}`;
 }
 
+/** '2023-11' -> 'late 2023'. For anything user-facing; never show the raw month. */
+export function describeMonth(month: string): string {
+  return seasonOf(month);
+}
+
 function monthSpan(earliest: string, latest: string): number {
   const [ey, em] = earliest.split('-').map(Number);
   const [ly, lm] = latest.split('-').map(Number);
@@ -379,7 +384,14 @@ function labelFor(earliest: string, latest: string): string {
 
   const from = seasonOf(earliest);
   const to = seasonOf(latest);
-  return from === to ? `roughly ${from}` : `roughly ${from} to ${to}`;
+  if (from === to) return `roughly ${from}`;
+
+  // Same year on both ends reads better without repeating it.
+  const [fromSeason, fromYear] = from.split(' ');
+  const [toSeason, toYear] = to.split(' ');
+  if (fromYear === toYear) return `roughly ${fromSeason} to ${toSeason} ${toYear}`;
+
+  return `roughly ${from} to ${to}`;
 }
 
 /*
@@ -405,7 +417,6 @@ export function estimateIssuanceEra(plate: string, now: Date = new Date()): Issu
   assertValid(plate);
 
   const ordinal = toOrdinal(plate);
-  const oldest = ANCHORS[0];
   const newest = ANCHORS[ANCHORS.length - 1];
   const activation = activationZoneStart();
 

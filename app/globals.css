@@ -1,26 +1,162 @@
 @import "tailwindcss";
 
+/*
+ * Light mode only, deliberately. No dark theme, no toggle.
+ *
+ * The plate is the only place colour is spent. Everything around it is a cool
+ * off-white ground and neutral greys, so that a green rectangle in a list reads
+ * as an object rather than as a UI accent.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /*
+   * The plate green.
+   *
+   * Sampled from a photograph of a current Vermont plate: the median green
+   * there measures #15986E, considerably brighter and more saturated than it
+   * looks in the hand, because retroreflective sheeting blooms under a flash.
+   * The darkest fifth of that photo sits around #287355. This value keeps the
+   * measured hue (~160deg, which is greener and cooler than most web forest
+   * greens) and takes the lightness down to where a plate actually reads in
+   * daylight.
+   *
+   * White characters on it measure 6.8:1 — AA at any size, which matters
+   * because the same markup renders at 22px in a list row.
+   */
+  --plate-green: #14664a;
+  --plate-green-shadow: #0b4531; /* emboss underside */
+  --plate-green-light: #1b7a59;  /* emboss top edge */
+  --plate-white: #f6f8f7;        /* sheeting white, not paper white */
+
+  --ground: #f5f7f7;   /* cool off-white; explicitly not a warm cream */
+  --surface: #ffffff;  /* input fields and the few raised panels */
+  --rule: #d3d9d9;     /* hairlines — the only structural device */
+  --rule-strong: #b4bdbe;
+
+  --ink: #16191a;      /* neutral near-black, not a warm-tinted stand-in */
+  --ink-soft: #5c6668; /* 6.1:1 on ground — AA for small text */
+  --ink-faint: #838d8f; /* 3.2:1 — large text and disabled states only */
+
+  /*
+   * Notable-combination categories. Outlined badges, never filled: the brief
+   * allows exactly one strong colour and these must not compete with the plate.
+   * All five are desaturated to sit below it in visual weight.
+   */
+  --cat-airport: #3c6689;
+  --cat-tech: #565182;
+  --cat-slang: #8a5540;
+  --cat-initials: #4c6a53;
+  --cat-other: #5c6668;
+
+  /* Recessive chart chrome. Grid and axes must never compete with the data. */
+  --grid: #e4e8e9;
+  --axis: #c3cacb;
+
+  --warn: #8a5540;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-plate-green: var(--plate-green);
+  --color-plate-green-shadow: var(--plate-green-shadow);
+  --color-plate-green-light: var(--plate-green-light);
+  --color-plate-white: var(--plate-white);
+
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+
+  --color-cat-airport: var(--cat-airport);
+  --color-cat-tech: var(--cat-tech);
+  --color-cat-slang: var(--cat-slang);
+  --color-cat-initials: var(--cat-initials);
+  --color-cat-other: var(--cat-other);
+
+  --color-grid: var(--grid);
+  --color-axis: var(--axis);
+  --color-warn: var(--warn);
+
+  --font-sans: var(--font-public-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-plate: var(--font-barlow-condensed), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  html {
+    color-scheme: light;
+    /* iOS enlarges text in landscape without this. */
+    -webkit-text-size-adjust: 100%;
+    /* No rubber-band scroll past the ends; this lives on a home screen. */
+    overscroll-behavior: none;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    /* Kills the 300ms double-tap-to-zoom delay in standalone mode. */
+    touch-action: manipulation;
+  }
+
+  /*
+   * Every ordinal, count and date in this app is a figure that sits in a
+   * column. Tabular numerals keep them aligned without reaching for a
+   * monospace face, which would read as decoration here.
+   */
+  .tnum,
+  table {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--plate-green) 22%, transparent);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/*
+ * Motion appears in exactly two places, both answering an action: confirming a
+ * save and revealing a duplicate. Nothing animates on page load.
+ */
+@keyframes plate-stamp {
+  0% { transform: scale(1.025); }
+  100% { transform: scale(1); }
+}
+
+@keyframes panel-open {
+  from { grid-template-rows: 0fr; opacity: 0; }
+  to { grid-template-rows: 1fr; opacity: 1; }
+}
+
+.animate-stamp {
+  animation: plate-stamp 180ms cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+.animate-open {
+  display: grid;
+  animation: panel-open 220ms cubic-bezier(0.2, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-stamp,
+  .animate-open {
+    animation: none;
+  }
+  .animate-open {
+    grid-template-rows: 1fr;
+  }
+}
+
+/* Touch screens get targets you can hit one-handed in a parking lot. */
+@media (pointer: coarse) {
+  .tap {
+    min-height: 2.75rem;
+  }
 }
