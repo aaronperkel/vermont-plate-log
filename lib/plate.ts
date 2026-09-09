@@ -95,7 +95,7 @@ export type ValidationResult = { ok: true } | { ok: false; message: string };
  */
 export function validate(plate: string): ValidationResult {
   if (!CANONICAL.test(plate)) {
-    return { ok: false, message: 'A Vermont plate is three letters then three digits, like LAX 123.' };
+    return { ok: false, message: 'A Vermont plate is three letters then three digits, like ABC 123.' };
   }
 
   for (let i = 0; i < 3; i += 1) {

@@ -12,7 +12,7 @@ export const sightingCreateSchema = z.object({
     .string()
     .transform((raw) => parse(raw))
     .refine((p): p is string => p !== null, {
-      message: 'A Vermont plate is three letters then three digits, like LAX 123.',
+      message: 'A Vermont plate is three letters then three digits, like ABC 123.',
     })
     .superRefine((p, ctx) => {
       const result = validate(p);

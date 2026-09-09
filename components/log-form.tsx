@@ -131,7 +131,7 @@ export function LogForm() {
            * focus and pushes the plate you are reading off the screen.
            */
           className="tap mt-1 w-full border border-rule bg-surface px-3 py-3 text-2xl tracking-[0.12em] text-ink outline-none focus:border-rule-strong"
-          placeholder="LAX 123"
+          placeholder="ABC 123"
           autoCapitalize="characters"
           autoComplete="off"
           autoCorrect="off"
