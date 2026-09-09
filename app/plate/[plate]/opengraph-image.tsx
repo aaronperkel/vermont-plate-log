@@ -75,7 +75,7 @@ export default async function Image({ params }: { params: Promise<{ plate: strin
   const h = w / R.aspect;
 
   const caption = sighting
-    ? `Spotted by ${SPOTTERS[sighting.spottedBy]}${sighting.location ? ` in ${sighting.location}` : ''}`
+    ? `Spotted by ${SPOTTERS[sighting.spottedBy]}${sighting.location ? ` at ${sighting.location}` : ''}`
     : 'Not spotted yet';
 
   return new ImageResponse(

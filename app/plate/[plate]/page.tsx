@@ -49,7 +49,7 @@ export async function generateMetadata({
   const pretty = format(plate);
 
   const description = sighting
-    ? `Spotted by ${SPOTTERS[sighting.spottedBy]}${sighting.location ? ` in ${sighting.location}` : ''}, ${shortDate(sighting.spottedAt)}`
+    ? `Spotted by ${SPOTTERS[sighting.spottedBy]}${sighting.location ? ` at ${sighting.location}` : ''}, ${shortDate(sighting.spottedAt)}`
     : `Number ${toOrdinal(plate).toLocaleString()} in Vermont's passenger sequence. Not spotted yet.`;
 
   return {
@@ -78,6 +78,7 @@ export default async function PlatePage({ params }: { params: Promise<{ plate: s
         <Plate plate={plate} size="detail" />
         <SequenceLine
           marks={[...anchorMarks(), { ordinal, kind: 'current' }]}
+          anchorKey
           className="mt-6 w-full max-w-[33rem]"
         />
       </div>
@@ -110,7 +111,7 @@ export default async function PlatePage({ params }: { params: Promise<{ plate: s
             <p className="text-sm text-ink-soft">
               Spotted by{' '}
               <span className="font-medium text-ink">{SPOTTERS[sighting.spottedBy]}</span>
-              {sighting.location ? ` in ${sighting.location}` : ''} on {longDate(sighting.spottedAt)}.
+              {sighting.location ? ` at ${sighting.location}` : ''} on {longDate(sighting.spottedAt)}.
               {sighting.notes ? ` ${sighting.notes}` : ''}
             </p>
           ) : (
