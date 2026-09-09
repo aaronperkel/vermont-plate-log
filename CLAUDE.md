@@ -9,9 +9,9 @@ Next 16 App Router, Drizzle over Turso, Tailwind v4, deployed on Vercel.
 npm run dev
 npm test             # vitest, once
 npm run lint         # eslint, no prettier in this repo
-npm run build
+npm run build        # applies pending migrations first, then builds
 npm run db:generate  # write a migration after editing db/schema.ts
-npm run db:migrate
+npm run db:migrate   # on its own; the build does this too, so Vercel deploys migrate
 npm run icons        # regenerate home-screen PNGs from the plate artwork
 ```
 
