@@ -6,7 +6,7 @@ import { NotableBadge } from '@/components/notable-badge';
 import { Plate } from '@/components/plate';
 import { EmptyState, Figure, Section } from '@/components/ui';
 import { notableFor } from '@/lib/notable';
-import { ALPHABET, ANCHORS, currentRate, describeMonth, format, toOrdinal } from '@/lib/plate';
+import { ALPHABET, ANCHORS, currentRate, format, toOrdinal } from '@/lib/plate';
 import { listSightings } from '@/lib/queries/sightings';
 import { SPOTTERS, type Sighting, type Spotter } from '@/db/schema';
 
@@ -25,10 +25,6 @@ export default async function StatsPage() {
   }));
 
   const domainMax = Math.round(toOrdinal(`${ANCHORS[ANCHORS.length - 1].block}999`) * 1.04);
-  const anchorLines = ANCHORS.map((a) => ({
-    ordinal: toOrdinal(`${a.block}500`),
-    label: a.block,
-  }));
 
   // Running total along the sequence. The endpoints keep the step visible.
   const coverage = [
@@ -60,18 +56,14 @@ export default async function StatsPage() {
         <div>
           <h1 className="text-xl font-semibold text-ink">Stats</h1>
           <p className="mt-1 text-sm text-ink-soft">
-            The sequence advances at about {Math.round(currentRate())} plates a day, measured
-            between {ANCHORS[0].block} in {describeMonth(ANCHORS[0].observed)} and{' '}
-            {ANCHORS[ANCHORS.length - 1].block} in{' '}
-            {describeMonth(ANCHORS[ANCHORS.length - 1].observed)}.
+            The sequence advances at about {Math.round(currentRate())} plates a day.
           </p>
         </div>
 
         <Section title="Where the sequence has reached">
-          <CoverageChart data={coverage} anchors={anchorLines} domain={[1, domainMax]} />
+          <CoverageChart data={coverage} domain={[1, domainMax]} />
           <p className="mt-2 text-xs text-ink-faint">
-            The dashed lines are the two blocks confirmed by sighting. Your plates will plot against
-            them.
+            The axis spans the run Vermont has issued so far. Your plates will plot against it.
           </p>
         </Section>
 
@@ -86,8 +78,8 @@ export default async function StatsPage() {
             </Link>
           }
         >
-          The scale above comes from the two confirmed sightings in the sequence, not from your
-          collection — so it is already correct. Everything else here needs at least one plate.
+          The scale above comes from the sequence itself, not from your collection — so it is
+          already correct. Everything else here needs at least one plate.
         </EmptyState>
       </div>
     );
@@ -105,9 +97,9 @@ export default async function StatsPage() {
 
       <Section
         title="Where your plates sit in the sequence"
-        description="A running total along Vermont's single sequential run. The dashed lines are the two blocks confirmed by sighting."
+        description="A running total along Vermont's single sequential run."
       >
-        <CoverageChart data={coverage} anchors={anchorLines} domain={[1, domainMax]} />
+        <CoverageChart data={coverage} domain={[1, domainMax]} />
       </Section>
 
       <Section

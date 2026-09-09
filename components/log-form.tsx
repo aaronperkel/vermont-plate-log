@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plate } from '@/components/plate';
-import { SequenceLine, anchorMarks } from '@/components/sequence-line';
+import { SequenceLine } from '@/components/sequence-line';
 import { NotableBadge } from '@/components/notable-badge';
 import { notableFor } from '@/lib/notable';
 import { ALPHABET, estimateIssuanceEra, format, parse, toOrdinal, validate } from '@/lib/plate';
@@ -72,10 +72,10 @@ export function LogForm() {
     };
   }, [plate, ready]);
 
-  const marks = useMemo(() => {
-    const base = anchorMarks();
-    return preview ? [...base, { ordinal: preview.ordinal, kind: 'current' as const }] : base;
-  }, [preview]);
+  const marks = useMemo(
+    () => (preview ? [{ ordinal: preview.ordinal, kind: 'current' as const }] : []),
+    [preview],
+  );
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -112,7 +112,7 @@ export function LogForm() {
     <form onSubmit={submit} className="space-y-5">
       <div className="flex flex-col items-center pt-2">
         <Plate plate={typed} size="hero" stamped={status.kind === 'saved'} />
-        <SequenceLine marks={marks} anchorKey className="mt-5 w-full max-w-[25rem]" />
+        <SequenceLine marks={marks} className="mt-5 w-full max-w-[25rem]" />
       </div>
 
       <div>

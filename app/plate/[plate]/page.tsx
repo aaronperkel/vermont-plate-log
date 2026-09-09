@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { Plate } from '@/components/plate';
 import { NotableBadge } from '@/components/notable-badge';
-import { SequenceLine, anchorMarks } from '@/components/sequence-line';
+import { SequenceLine } from '@/components/sequence-line';
 import { ShareButton } from '@/components/share-button';
 import { notableFor } from '@/lib/notable';
 import { estimateIssuanceEra, format, parse, toOrdinal, validate } from '@/lib/plate';
@@ -76,11 +76,7 @@ export default async function PlatePage({ params }: { params: Promise<{ plate: s
     >
       <div className="flex flex-col items-center">
         <Plate plate={plate} size="detail" />
-        <SequenceLine
-          marks={[...anchorMarks(), { ordinal, kind: 'current' }]}
-          anchorKey
-          className="mt-6 w-full max-w-[33rem]"
-        />
+        <SequenceLine marks={[{ ordinal, kind: 'current' }]} className="mt-6 w-full max-w-[33rem]" />
       </div>
 
       <div className="mt-8 space-y-5">

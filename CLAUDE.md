@@ -31,7 +31,9 @@ README explains it at length.
 
 **Anchors are blocks, never plates**, and they live in code, never in the database. The sightings
 table only ever holds plates somebody actually saw; there is no reference-row flag because there
-is no second kind of row. Charts get their scale from `ANCHORS` as reference lines.
+is no second kind of row. Charts and the sequence line take their scale from `ANCHORS` through
+the axis domain, and never draw or name them — a labelled position reads as a plate somebody
+logged, which is the one thing an empty collection must not show.
 
 **A block is 999 plates.** The numeric run is `001`–`999`; there is no `000`.
 
