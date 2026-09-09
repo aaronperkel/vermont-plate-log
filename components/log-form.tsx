@@ -34,6 +34,18 @@ function today(): string {
 }
 
 /*
+ * The whole grammar of the field: six alphanumerics, upper case.
+ *
+ * Applied on the way into state rather than on the way out, so the field can
+ * never hold something the plate above it is ignoring. Typing a symbol or a
+ * seventh character does nothing at all, which is quieter than showing it and
+ * then refusing to save it. Paste and autocorrect go through here too.
+ */
+function clean(value: string): string {
+  return value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6);
+}
+
+/*
  * Feedback while the plate is still incomplete. A bad letter is called out the
  * moment it is typed rather than on submit — you are standing in a car park and
  * the car may be leaving.
@@ -52,13 +64,12 @@ function liveError(typed: string): string | null {
 
 export function LogForm() {
   const router = useRouter();
-  const [raw, setRaw] = useState('');
+  const [typed, setTyped] = useState('');
   const [spottedBy, setSpottedBy] = useState<Spotter>('aaron');
   const [spottedAt, setSpottedAt] = useState(today);
   const [location, setLocation] = useState('');
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
 
-  const typed = raw.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6);
   const plate = parse(typed);
   const error = liveError(typed);
   const ready = plate !== null && validate(plate).ok;
@@ -100,7 +111,7 @@ export function LogForm() {
       }
 
       setStatus({ kind: 'saved', plate });
-      setRaw('');
+      setTyped('');
       setLocation('');
       router.refresh();
     } catch {
@@ -121,9 +132,9 @@ export function LogForm() {
         </label>
         <input
           id="plate"
-          value={raw}
+          value={typed}
           onChange={(e) => {
-            setRaw(e.target.value.toUpperCase());
+            setTyped(clean(e.target.value));
             if (status.kind !== 'idle' && status.kind !== 'saving') setStatus({ kind: 'idle' });
           }}
           /*
@@ -132,6 +143,7 @@ export function LogForm() {
            */
           className="tap mt-1 w-full border border-rule bg-surface px-3 py-3 text-2xl tracking-[0.12em] text-ink outline-none focus:border-rule-strong"
           placeholder="ABC 123"
+          maxLength={6}
           autoCapitalize="characters"
           autoComplete="off"
           autoCorrect="off"
