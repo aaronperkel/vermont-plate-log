@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local sqlite dev database (production lives in Turso)
+local.db
+local.db-journal
+local.db-wal
+local.db-shm
