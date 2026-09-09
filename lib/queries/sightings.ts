@@ -1,4 +1,4 @@
-import { asc, eq } from 'drizzle-orm';
+import { asc, count, eq } from 'drizzle-orm';
 import { getDb } from '@/db';
 import { type Sighting, sightings } from '@/db/schema';
 
@@ -18,5 +18,6 @@ export async function findByPlate(plate: string): Promise<Sighting | null> {
 }
 
 export async function countSightings(): Promise<number> {
-  return (await listSightings()).length;
+  const [row] = await getDb().select({ total: count() }).from(sightings);
+  return row?.total ?? 0;
 }
