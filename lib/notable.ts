@@ -102,7 +102,8 @@ export const NOTABLE: Record<string, Notable> = {
   MEH: { label: 'Unimpressed', category: 'slang' },
   NAH: { label: 'No thank you', category: 'slang' },
   WTF: { label: 'What the…', category: 'slang', theoretical: true },
-  KYS: { label: 'Unrepeatable', category: 'slang', theoretical: true },
+  // Seen repeatedly on the road, so Vermont's list evidently does not catch it.
+  KYS: { label: 'Unrepeatable', category: 'slang' },
   FML: { label: 'Also unrepeatable', category: 'slang', theoretical: true },
   ASS: { label: 'Blocked in every state that has a list', category: 'slang', theoretical: true },
   SEX: { label: 'Likewise', category: 'slang', theoretical: true },
