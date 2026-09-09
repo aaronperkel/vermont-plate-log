@@ -21,6 +21,16 @@ import {
  */
 export type CoveragePoint = { ordinal: number; total: number };
 
+/*
+ * The left margin stays at 0.
+ *
+ * The y-axis labels are right-aligned into the space this margin and the axis
+ * width leave for them, so pulling it negative to tighten the gutter clips the
+ * leading digit off every label once the counts reach double figures — and does
+ * it silently, since a clipped "24" is still a legible "4".
+ */
+const MARGIN = { top: 20, right: 8, bottom: 0, left: 0 };
+
 export function CoverageChart({
   data,
   domain,
@@ -31,7 +41,7 @@ export function CoverageChart({
   return (
     <div className="h-56 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 20, right: 8, bottom: 0, left: -24 }}>
+        <AreaChart data={data} margin={MARGIN}>
           <CartesianGrid stroke="var(--grid)" strokeDasharray="0" vertical={false} />
           <XAxis
             dataKey="ordinal"
