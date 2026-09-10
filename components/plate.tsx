@@ -19,6 +19,32 @@ const WIDTHS: Record<PlateSize, string> = {
   detail: 'min(90vw, 33rem)',
 };
 
+/*
+ * Stamped metal: a lit top edge and a shadowed underside, both in the plate's
+ * own greens rather than black and white, which is what keeps it from reading
+ * as a drop shadow. Measured in em against the serial's own font size, so it
+ * fades to nothing at row size instead of smearing.
+ */
+const EMBOSS = `0 0.022em 0.004em var(--plate-green-shadow), 0 -0.014em 0.004em var(--plate-green-light)`;
+
+/** Placeholder strength, roughly where a browser holds one in an empty input. */
+const PLACEHOLDER_OPACITY = 0.38;
+
+const SLOTS = 6;
+
+/*
+ * One character of the serial.
+ *
+ * A typed character is stamped; a slot still waiting for one shows the
+ * placeholder character instead, faint and flat, because a placeholder is not
+ * stamped metal. Holding the waiting slots is the point: the serial is centred,
+ * so a blank slot with no width would let every character shift sideways on
+ * each keystroke instead of landing where it finally sits.
+ */
+function Slot({ char, typed }: { char: string; typed: boolean }) {
+  return <span style={typed ? { textShadow: EMBOSS } : { opacity: PLACEHOLDER_OPACITY }}>{char}</span>;
+}
+
 type PlateProps = {
   /** Canonical unspaced form. May be partial while someone is typing. */
   plate: string;
@@ -26,8 +52,8 @@ type PlateProps = {
   /** Plays the stamp animation once. Used to confirm a save, nothing else. */
   stamped?: boolean;
   /**
-   * Serial to show faintly while `plate` is empty, the way a placeholder sits
-   * in an empty input. Only the log field passes this.
+   * Serial to fill the slots that have not been typed yet, the way a
+   * placeholder sits in an empty input. Only the log field passes this.
    */
   placeholder?: string;
   /**
@@ -46,11 +72,15 @@ export function Plate({
   decorative = false,
   className = '',
 }: PlateProps) {
-  /* Empty and given a placeholder: show that instead, at placeholder strength. */
-  const ghost = plate.length === 0 && placeholder !== undefined;
-  const serial = ghost ? placeholder.replace(/[^a-zA-Z0-9]/g, '').toUpperCase() : plate;
-  const letters = serial.slice(0, 3).padEnd(3, ' ');
-  const digits = serial.slice(3, 6).padEnd(3, ' ');
+  /*
+   * Every slot is rendered, always. What has been typed comes from `plate`;
+   * the rest comes from the placeholder, or is blank when there is none.
+   */
+  const waiting = (placeholder?.replace(/[^a-zA-Z0-9]/g, '').toUpperCase() ?? '').padEnd(SLOTS, ' ');
+  const slots = Array.from({ length: SLOTS }, (_, i) => ({
+    char: i < plate.length ? plate[i] : waiting[i],
+    typed: i < plate.length,
+  }));
 
   return (
     <div
@@ -69,8 +99,8 @@ export function Plate({
       aria-label={
         decorative
           ? undefined
-          : plate.trim().length === 6
-            ? `Vermont plate ${letters} ${digits}`
+          : plate.length === SLOTS
+            ? `Vermont plate ${plate.slice(0, 3)} ${plate.slice(3)}`
             : 'Vermont plate'
       }
     >
@@ -117,22 +147,21 @@ export function Plate({
           textIndent: `${R.serialTracking}em`,
           lineHeight: 1,
           fontWeight: 600,
-          /*
-           * Stamped metal: a lit top edge and a shadowed underside, both in the
-           * plate's own greens rather than black and white, which is what keeps
-           * it from reading as a drop shadow. Measured in em, so it fades to
-           * nothing at row size instead of smearing.
-           */
-          textShadow: ghost
-            ? 'none'
-            : `0 0.022em 0.004em var(--plate-green-shadow), 0 -0.014em 0.004em var(--plate-green-light)`,
-          /* A placeholder is not stamped metal, so it loses the emboss as well as the weight. */
-          opacity: ghost ? 0.38 : 1,
         }}
       >
-        {letters}
+        {/*
+          Per-character spans, because a typed character and a waiting one are
+          styled differently. Letter-spacing applies after every character
+          whatever the markup, so a complete plate lays out exactly as the plain
+          string it used to be.
+        */}
+        {slots.slice(0, 3).map((slot, i) => (
+          <Slot key={i} char={slot.char} typed={slot.typed} />
+        ))}
         <span style={{ letterSpacing: `${R.serialTracking + 0.12}em` }}> </span>
-        {digits}
+        {slots.slice(3).map((slot, i) => (
+          <Slot key={i + 3} char={slot.char} typed={slot.typed} />
+        ))}
       </div>
     </div>
   );
