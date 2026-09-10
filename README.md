@@ -168,7 +168,7 @@ npm run db:generate  write a migration from db/schema.ts
 npm run db:migrate   apply migrations — `npm run build` runs this first, so a Vercel
                      deploy migrates the database it is about to serve
 npm run db:studio    drizzle studio
-npm run icons        regenerate the home-screen PNGs from the plate artwork
+npm run icons        regenerate the tab and home-screen PNGs from the plate artwork
 ```
 
 Locally `DATABASE_URL="file:./local.db"` needs no Turso account. In production the Turso

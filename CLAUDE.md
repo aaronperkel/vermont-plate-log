@@ -12,7 +12,7 @@ npm run lint         # eslint, no prettier in this repo
 npm run build        # applies pending migrations first, then builds
 npm run db:generate  # write a migration after editing db/schema.ts
 npm run db:migrate   # on its own; the build does this too, so Vercel deploys migrate
-npm run icons        # regenerate home-screen PNGs from the plate artwork
+npm run icons        # regenerate the tab and home-screen PNGs from the plate artwork
 ```
 
 Locally `DATABASE_URL="file:./local.db"` needs no Turso account.

@@ -16,7 +16,14 @@ import { PLATE_COLORS, PLATE_RATIOS as R } from '../lib/plate-style';
  * TrueType face; sharp rasterises the result. Nothing here needs a browser.
  */
 
-const OUT = join(process.cwd(), 'public');
+const PUBLIC = join(process.cwd(), 'public');
+/*
+ * The tab icon is the one that cannot live in public/. Next puts an icon it
+ * discovers in app/ ahead of anything metadata.icons declares, so a file here
+ * is the only way to win the tab — which is precisely how the scaffolded
+ * favicon.ico held it while the plate artwork sat behind it in the metadata.
+ */
+const APP = join(process.cwd(), 'app');
 
 /*
  * maskRadius is the corner the platform will cut, as a fraction of the side.
@@ -24,8 +31,8 @@ const OUT = join(process.cwd(), 'public');
  * of to the plate's own radius — see tile().
  */
 const SIZES = [
-  { file: 'icon-192.png', size: 192, safeArea: 1, maskRadius: 0 },
-  { file: 'icon-512.png', size: 512, safeArea: 1, maskRadius: 0 },
+  { file: 'icon-192.png', dir: PUBLIC, size: 192, safeArea: 1, maskRadius: 0 },
+  { file: 'icon-512.png', dir: PUBLIC, size: 512, safeArea: 1, maskRadius: 0 },
   /*
    * iOS masks the home-screen icon to its superellipse whatever the artwork
    * says: on 180px that is a 40px corner, against a keyline sitting 10px in
@@ -33,13 +40,26 @@ const SIZES = [
    * and by 10px along the flats, so it read as a frame with its corners
    * sheared off. 0.2237 is the ratio Apple has used since iOS 7.
    */
-  { file: 'apple-touch-icon.png', size: 180, safeArea: 1, maskRadius: 0.2237 },
+  { file: 'apple-touch-icon.png', dir: PUBLIC, size: 180, safeArea: 1, maskRadius: 0.2237 },
   /*
    * Android crops maskable icons to its own shape, anywhere from a circle to a
    * squircle, and only the middle 80% is guaranteed to survive. The artwork is
    * scaled down to sit inside that, which is what keeps the keyline clear here.
    */
-  { file: 'icon-maskable-512.png', size: 512, safeArea: 0.78, maskRadius: 0 },
+  { file: 'icon-maskable-512.png', dir: PUBLIC, size: 512, safeArea: 0.78, maskRadius: 0 },
+  /*
+   * The browser tab, rendered at the size it is actually shown rather than
+   * scaled down from a large one — a downscaled keyline lands between pixels
+   * and greys out. At this size the keyline hits the 2px floor in tile() and
+   * so reads heavier than it does on the home screen, which is the trade for
+   * it being visible at all.
+   *
+   * A png, not an .ico: sharp cannot write that container. Browsers have read
+   * png icons for a decade and take this one from the link tag, but nothing
+   * answers a bare /favicon.ico any more — a scraper that guesses that path
+   * rather than reading the tag gets a 404.
+   */
+  { file: 'icon.png', dir: APP, size: 32, safeArea: 1, maskRadius: 0 },
 ];
 
 function tile(size: number, safeArea: number, maskRadius: number) {
@@ -97,9 +117,9 @@ function tile(size: number, safeArea: number, maskRadius: number) {
 
 async function main() {
   const font = await readFile(join(process.cwd(), 'assets', 'fonts', 'BarlowSemiCondensed-SemiBold.ttf'));
-  await mkdir(OUT, { recursive: true });
 
-  for (const { file, size, safeArea, maskRadius } of SIZES) {
+  for (const { file, dir, size, safeArea, maskRadius } of SIZES) {
+    await mkdir(dir, { recursive: true });
     const svg = await satori(tile(size, safeArea, maskRadius) as never, {
       width: size,
       height: size,
@@ -107,7 +127,7 @@ async function main() {
     });
 
     const png = await sharp(Buffer.from(svg)).png().toBuffer();
-    await writeFile(join(OUT, file), png);
+    await writeFile(join(dir, file), png);
     console.log(`${file}  ${size}x${size}`);
   }
 }
