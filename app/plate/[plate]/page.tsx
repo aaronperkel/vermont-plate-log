@@ -5,6 +5,7 @@ import { Plate } from '@/components/plate';
 import { NotableBadge } from '@/components/notable-badge';
 import { SequenceLine } from '@/components/sequence-line';
 import { ShareButton } from '@/components/share-button';
+import { clockTime, longDate, shortDate } from '@/lib/dates';
 import { notableFor } from '@/lib/notable';
 import { estimateIssuanceEra, format, parse, toOrdinal, validate } from '@/lib/plate';
 import { findByPlate } from '@/lib/queries/sightings';
@@ -21,18 +22,6 @@ const SPOTTERS: Record<string, string> = { aaron: 'Aaron', riley: 'Riley' };
  * what makes it safe to leave open: the URL space says nothing about what is in
  * the collection, and there is no way from here into the gated views.
  */
-
-function longDate(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
-function shortDate(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-}
 
 async function load(raw: string): Promise<{ plate: string; sighting: Sighting | null }> {
   const plate = parse(decodeURIComponent(raw));
@@ -107,7 +96,8 @@ export default async function PlatePage({ params }: { params: Promise<{ plate: s
             <p className="text-sm text-ink-soft">
               Spotted by{' '}
               <span className="font-medium text-ink">{SPOTTERS[sighting.spottedBy]}</span>
-              {sighting.location ? ` at ${sighting.location}` : ''} on {longDate(sighting.spottedAt)}.
+              {sighting.location ? ` at ${sighting.location}` : ''} on{' '}
+              {longDate(sighting.spottedAt)}, at {clockTime(sighting.createdAt)}.
               {sighting.notes ? ` ${sighting.notes}` : ''}
             </p>
           ) : (

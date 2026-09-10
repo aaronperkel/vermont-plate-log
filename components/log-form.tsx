@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Plate } from '@/components/plate';
 import { SequenceLine } from '@/components/sequence-line';
 import { NotableBadge } from '@/components/notable-badge';
+import { clockTime, longDate } from '@/lib/dates';
 import { notableFor } from '@/lib/notable';
 import { ALPHABET, estimateIssuanceEra, format, parse, toOrdinal, validate } from '@/lib/plate';
 import { SPOTTERS, type Sighting, type Spotter } from '@/db/schema';
@@ -245,11 +246,7 @@ export function LogForm() {
                 <p className="text-sm font-semibold text-ink">Already logged</p>
                 <p className="mt-1 text-sm text-ink-soft">
                   {SPOTTER_LABELS[status.existing.spottedBy]} recorded {format(status.existing.plate)} on{' '}
-                  {new Date(`${status.existing.spottedAt}T00:00:00`).toLocaleDateString('en-US', {
-                    month: 'long',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
+                  {longDate(status.existing.spottedAt)}, at {clockTime(status.existing.createdAt)}
                   {status.existing.location ? `, in ${status.existing.location}` : ''}.
                 </p>
                 <Link

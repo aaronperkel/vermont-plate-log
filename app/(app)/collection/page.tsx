@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Plate } from '@/components/plate';
 import { NotableBadge } from '@/components/notable-badge';
 import { EmptyState, Section } from '@/components/ui';
+import { clockTime, longDate } from '@/lib/dates';
 import { notableFor } from '@/lib/notable';
 import { estimateIssuanceEra, format } from '@/lib/plate';
 import { listSightings } from '@/lib/queries/sightings';
@@ -13,18 +14,16 @@ export const metadata = { title: 'Collection' };
 
 const SPOTTER_LABELS: Record<Spotter, string> = { aaron: 'Aaron', riley: 'Riley' };
 
-function longDate(iso: string): string {
-  return new Date(`${iso}T00:00:00`).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-  });
-}
-
-/** One sentence of context. No middle-dot-separated fragments. */
+/*
+ * One sentence of context. No middle-dot-separated fragments.
+ *
+ * The date is the one the spotter typed; the time comes from createdAt, since
+ * the form never asks for one. They agree unless the row was backdated.
+ */
 function describe(sighting: Sighting): string {
   const where = sighting.location ? ` at ${sighting.location}` : '';
-  return `${SPOTTER_LABELS[sighting.spottedBy]} spotted this${where} on ${longDate(sighting.spottedAt)}.`;
+  const when = `${longDate(sighting.spottedAt)}, at ${clockTime(sighting.createdAt)}`;
+  return `${SPOTTER_LABELS[sighting.spottedBy]} spotted this${where} on ${when}.`;
 }
 
 function Row({ sighting }: { sighting: Sighting }) {
