@@ -78,8 +78,9 @@ describe('validate', () => {
     expect(result.message).toContain(letter);
   });
 
-  it('rejects 000 but accepts 001 and 999', () => {
-    expect(validate('LAX000').ok).toBe(false);
+  it('accepts the whole 000 to 999 run', () => {
+    // 000 was rejected until a KXB 000 sighting in September 2026. See BLOCK_SIZE.
+    expect(validate('LAX000').ok).toBe(true);
     expect(validate('LAX001').ok).toBe(true);
     expect(validate('LAX999').ok).toBe(true);
   });
@@ -93,25 +94,28 @@ describe('validate', () => {
 
 describe('ordinals', () => {
   it('starts at 1 and ends at the sequence size', () => {
-    expect(toOrdinal('AAA001')).toBe(1);
+    expect(toOrdinal('AAA000')).toBe(1);
+    expect(toOrdinal('AAA001')).toBe(2);
     expect(toOrdinal('ZZZ999')).toBe(SEQUENCE_SIZE);
-    expect(SEQUENCE_SIZE).toBe(22 ** 3 * 999);
+    expect(SEQUENCE_SIZE).toBe(22 ** 3 * 1000);
   });
 
-  it('uses 999 plates per block, not 1000', () => {
-    expect(BLOCK_SIZE).toBe(999);
-    expect(toOrdinal('AAB001') - toOrdinal('AAA001')).toBe(999);
+  it('uses 1000 plates per block, and 000 is the first of them', () => {
+    expect(BLOCK_SIZE).toBe(1000);
+    expect(toOrdinal('AAB001') - toOrdinal('AAA001')).toBe(1000);
+    // 000 sorts directly below its own 001 and directly above the block below.
+    expect(toOrdinal('AAB000') - toOrdinal('AAA999')).toBe(1);
   });
 
   it('round-trips through fromOrdinal', () => {
-    const samples = [1, 2, 999, 1000, 15_985, 4_153_294, 4_370_748, SEQUENCE_SIZE];
+    const samples = [1, 2, 999, 1000, 1001, 15_985, 4_153_294, 4_370_748, SEQUENCE_SIZE];
     for (const ordinal of samples) {
       expect(toOrdinal(fromOrdinal(ordinal))).toBe(ordinal);
     }
   });
 
   it('increases strictly across a hand-ordered list', () => {
-    const ordered = ['AAA001', 'AAA002', 'AAA999', 'AAB001', 'AAU001', 'AAZ999', 'ABA001', 'KPZ451', 'LAX123', 'ZZZ999'];
+    const ordered = ['AAA000', 'AAA001', 'AAA002', 'AAA999', 'AAB000', 'AAB001', 'AAU001', 'AAZ999', 'ABA001', 'KPZ451', 'KXB000', 'LAX123', 'ZZZ999'];
     const ordinals = ordered.map(toOrdinal);
     for (let i = 1; i < ordinals.length; i += 1) {
       expect(ordinals[i]).toBeGreaterThan(ordinals[i - 1]);
@@ -147,6 +151,7 @@ describe('the legacy ordinal', () => {
   });
 
   it('agrees with the modern ordinal at the very start', () => {
+    expect(toLegacyOrdinal('AAA000')).toBe(toOrdinal('AAA000'));
     expect(toLegacyOrdinal('AAA001')).toBe(toOrdinal('AAA001'));
   });
 });

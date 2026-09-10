@@ -9,9 +9,10 @@ Next 16 App Router, Drizzle over Turso, Tailwind v4, deployed on Vercel.
 npm run dev
 npm test             # vitest, once
 npm run lint         # eslint, no prettier in this repo
-npm run build        # applies pending migrations first, then builds
+npm run build        # migrates, reconciles sightings.ordinal, then builds
 npm run db:generate  # write a migration after editing db/schema.ts
 npm run db:migrate   # on its own; the build does this too, so Vercel deploys migrate
+npm run db:backfill  # rewrite sightings.ordinal from toOrdinal; --check to dry run
 npm run icons        # regenerate the tab and home-screen PNGs from the plate artwork
 ```
 
@@ -42,7 +43,10 @@ deliberate exceptions, both of which read as format rather than as a sighting: t
 hint in the log form and `lib/validation.ts`, and the Gaps grid, which labels every prefix
 `AA`–`ZZ` in tooltips and marks the unlogged ones as unlogged.
 
-**A block is 999 plates.** The numeric run is `001`–`999`; there is no `000`.
+**A block is 1000 plates.** The numeric run is `000`–`999`. It read `001`–`999` until September
+2026, on the assumption that a block starts at 001 — Vermont's does not. Where `000` falls in
+the issuing order is still unknown; the model assumes first in its block. `BLOCK_SIZE` in
+`lib/plate.ts` carries the evidence and the assumption together.
 
 **The plate exists twice.** `components/plate.tsx` uses Tailwind and custom properties;
 `app/plate/[plate]/opengraph-image.tsx` re-implements it with inline styles because satori
@@ -56,7 +60,11 @@ which the serial overrides, putting it several plate-widths off the plate.
 
 **`sightings.ordinal` is denormalised** from `toOrdinal` on insert and never written by hand. SQL
 cannot derive it, because sorting the plate string lexically orders over 26 ASCII letters while
-the sequence uses 22.
+the sequence uses 22. Which also means changing the ordinal arithmetic silently invalidates every
+stored value, and nothing warns you: the old numbers stay plausible and just sort wrong. So the
+build runs `db:backfill` after `db:migrate`, and a Vercel deploy reconciles the column the same
+way it applies migrations. The backfill is idempotent, so every deploy that changes nothing costs
+one query and prints one line.
 
 ## Conventions
 

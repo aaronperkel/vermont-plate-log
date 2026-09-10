@@ -37,11 +37,24 @@ export const LEGACY_ALPHABET = 'ABCDEFGHKLMNPRSTWXY';
 export const POST_ACTIVATION_LETTERS = 'UVZ';
 
 /*
- * Plates per letter block. The numeric run is 001-999 — there is no 000 — so a
- * block holds 999 plates, not 1000. Getting this wrong shifts every ordinal in
- * the database by a growing amount.
+ * Plates per letter block. The numeric run is 000-999, so a block holds 1000.
+ * Getting this wrong shifts every ordinal in the database by a growing amount.
+ *
+ * This read 999 until a KXB 000 sighting in September 2026, on the assumption
+ * every state starts a block at 001. It does not: the sighting was confirmed
+ * first-hand and then independently against a plate lookup that returns the
+ * vehicle for that plate, returns a different vehicle for the 001 above it, and
+ * correctly finds nothing for a plate containing a letter Vermont never issues.
+ *
+ * What that evidence does NOT establish is where 000 falls in the issuing
+ * order. Everything here assumes it comes first in its block, which is the only
+ * reading consistent with it being part of the run at all — but it could be
+ * issued out of sequence, as a replacement or a special, in which case every
+ * ordinal is quietly one slot off within its own block. Nothing in the app
+ * depends on that distinction today, and no estimate moves by a measurable
+ * amount either way. Revisit it if a second 000 ever turns up.
  */
-export const BLOCK_SIZE = 999;
+export const BLOCK_SIZE = 1000;
 
 /** Month the sequence began issuing U, V and Z. Observed, not documented. */
 export const ACTIVATION_MONTH = '2023-11';
@@ -109,10 +122,6 @@ export function validate(plate: string): ValidationResult {
     };
   }
 
-  if (digitsOf(plate) === 0) {
-    return { ok: false, message: 'The digits run 001 to 999. There is no 000 in the sequence.' };
-  }
-
   return { ok: true };
 }
 
@@ -148,8 +157,8 @@ function assertValid(plate: string): void {
 
 /*
  * Ordinal of the last plate before a block starts, so that
- * ordinal(plate) === blockBase(block) + digits. AAA is base 0, so AAA 001 is
- * ordinal 1 and there is no ordinal 0.
+ * ordinal(plate) === blockBase(block) + digits + 1. AAA is base 0, so AAA 000
+ * is ordinal 1 and there is no ordinal 0.
  */
 function blockBase(block: string, alphabet: string): number | null {
   const radix = alphabet.length;
@@ -165,7 +174,7 @@ function blockBase(block: string, alphabet: string): number | null {
 }
 
 /**
- * Position in the modern 22-letter sequence. AAA 001 is 1, ZZZ 999 is the last.
+ * Position in the modern 22-letter sequence. AAA 000 is 1, ZZZ 999 is the last.
  *
  * This is the canonical sort key and the value stored on each sighting. It is
  * NOT a reliable measure of how many plates preceded this one — for a plate
@@ -174,7 +183,7 @@ function blockBase(block: string, alphabet: string): number | null {
  */
 export function toOrdinal(plate: string): number {
   assertValid(plate);
-  return blockBase(blockOf(plate), ALPHABET)! + digitsOf(plate);
+  return blockBase(blockOf(plate), ALPHABET)! + digitsOf(plate) + 1;
 }
 
 /**
@@ -187,7 +196,7 @@ export function toOrdinal(plate: string): number {
 export function toLegacyOrdinal(plate: string): number | null {
   assertValid(plate);
   const base = blockBase(blockOf(plate), LEGACY_ALPHABET);
-  return base === null ? null : base + digitsOf(plate);
+  return base === null ? null : base + digitsOf(plate) + 1;
 }
 
 /** Inverse of toOrdinal. */
@@ -197,7 +206,7 @@ export function fromOrdinal(ordinal: number): string {
   }
 
   const zeroBased = ordinal - 1;
-  const digits = (zeroBased % BLOCK_SIZE) + 1;
+  const digits = zeroBased % BLOCK_SIZE;
   let blockIndex = Math.floor(zeroBased / BLOCK_SIZE);
 
   const letters: string[] = [];

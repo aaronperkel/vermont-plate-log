@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "tsx scripts/migrate.ts && next build",
+    "build": "tsx scripts/migrate.ts && tsx scripts/backfill-ordinals.ts && next build",
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx scripts/migrate.ts",
+    "db:backfill": "tsx scripts/backfill-ordinals.ts",
     "db:studio": "drizzle-kit studio",
     "icons": "tsx scripts/icons.ts"
   },

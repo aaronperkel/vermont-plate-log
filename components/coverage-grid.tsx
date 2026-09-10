@@ -16,7 +16,7 @@ import { ALPHABET, BLOCK_SIZE, toOrdinal } from '@/lib/plate';
 export const PREFIX_SIZE = ALPHABET.length * BLOCK_SIZE;
 
 export function prefixRange(prefix: string): [number, number] {
-  return [toOrdinal(`${prefix}${ALPHABET[0]}001`), toOrdinal(`${prefix}${ALPHABET[ALPHABET.length - 1]}999`)];
+  return [toOrdinal(`${prefix}${ALPHABET[0]}000`), toOrdinal(`${prefix}${ALPHABET[ALPHABET.length - 1]}999`)];
 }
 
 export function allPrefixes(): string[] {

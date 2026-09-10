@@ -77,7 +77,7 @@ estimate in the app is that one number applied to a distance.
 
 **Anchors are blocks, not plates.** What actually gets confirmed in the wild is which block the
 sequence was in at a given time; nobody writes down the digits. Anchoring on the block is the
-honest representation, and the block midpoint bounds the error at ±499 plates — about two and a
+honest representation, and the block midpoint bounds the error at ±500 plates — about two and a
 half days, which is nothing next to every other source of error here. It also means nothing in
 `ANCHORS` is a plate string, so an anchor can never be mistaken for, or accidentally seeded as,
 a sighting.
@@ -97,7 +97,21 @@ estimate near it without touching the estimator. Only put first-hand observation
 
 ### Other things that look wrong and are not
 
-- **A block is 999 plates, not 1,000.** The numeric run is `001`–`999`; there is no `000`.
+- **A block is 1,000 plates.** The numeric run is `000`–`999`. It read `001`–`999` until September
+  2026, on the assumption every state starts a block at 001. Vermont does not: a `000` was seen
+  first-hand and then confirmed against a plate lookup that returns a vehicle for it, a different
+  vehicle for the 001 above it, and nothing at all for a plate containing a letter Vermont has
+  never issued. What that does **not** settle is where `000` falls in the issuing order — the
+  model assumes first in its block, which is the only reading consistent with it being part of the
+  run, but it could be issued out of sequence as a replacement or a special, in which case every
+  ordinal is one slot off inside its own block. Nothing in the app depends on the difference and
+  no estimate moves measurably either way. A second one would settle it.
+- **Changing the ordinal arithmetic means rewriting the database.** `sightings.ordinal` is
+  denormalised on insert, so it keeps describing the old sequence until it is rewritten from
+  `toOrdinal`. The build does that — `db:migrate`, then `db:backfill`, then `next build` — so a
+  deploy reconciles the column the same way it applies migrations. It is idempotent, and it is how
+  the move from 999 to 1,000 was applied. Running it by hand is `npm run db:backfill`, with
+  `-- --check` to see what would change first.
 - **Issuance is not perfectly dense.** Vermont reportedly leaves multi-thousand gaps for vanity
   reservations and administrative buffers, so the difference between two ordinals overstates the
   number of plates actually issued between them. The derived daily rate absorbs this, but any
