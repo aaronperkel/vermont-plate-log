@@ -123,38 +123,64 @@ export function LogForm() {
   return (
     <form onSubmit={submit} className="space-y-5">
       <div className="flex flex-col items-center pt-2">
-        <Plate plate={typed} size="hero" stamped={status.kind === 'saved'} />
+        {/*
+          The plate is the field. A real input sits over it, transparent, so the
+          keyboard, paste, autocorrect and assistive tech all behave exactly as
+          they would on a visible box — the plate is only what it looks like.
+
+          The wrapper takes its size from the plate in flow, so `inset-0` covers
+          the plate exactly and tapping anywhere on it puts the keyboard up. The
+          input must stay inside it: left to the form, `absolute` would resolve
+          against the page and the real hit area would sit somewhere else.
+
+          The input comes first so the plate can follow it as a sibling and pick
+          up the focus ring through `peer-focus`. The ring belongs on the plate
+          rather than the wrapper because an outline follows the border radius of
+          the element it is on, and only the plate knows its own radius.
+        */}
+        <div className="relative">
+          <input
+            id="plate"
+            value={typed}
+            onChange={(e) => {
+              setTyped(clean(e.target.value));
+              if (status.kind !== 'idle' && status.kind !== 'saving') setStatus({ kind: 'idle' });
+            }}
+            /*
+             * Transparent rather than hidden: display:none or a zero-size box
+             * loses the caret on iOS and stops the keyboard opening on focus.
+             * 16px is what keeps Safari from zooming the page on that focus and
+             * pushing the plate you are reading off the screen.
+             */
+            className="peer absolute inset-0 z-10 h-full w-full cursor-pointer bg-transparent text-[16px] text-transparent caret-transparent opacity-0 outline-none"
+            maxLength={6}
+            autoCapitalize="characters"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            enterKeyHint="done"
+            aria-label="Plate"
+            aria-describedby="plate-feedback"
+            aria-invalid={error !== null}
+          />
+
+          <Plate
+            plate={typed}
+            size="hero"
+            stamped={status.kind === 'saved'}
+            placeholder="ABC 123"
+            decorative
+            className="peer-focus:outline-2 peer-focus:outline-offset-4 peer-focus:outline-ink"
+          />
+        </div>
+
         <SequenceLine marks={marks} className="mt-5 w-full max-w-[25rem]" />
-      </div>
 
-      <div>
-        <label htmlFor="plate" className="block text-sm font-medium text-ink">
-          Plate
-        </label>
-        <input
-          id="plate"
-          value={typed}
-          onChange={(e) => {
-            setTyped(clean(e.target.value));
-            if (status.kind !== 'idle' && status.kind !== 'saving') setStatus({ kind: 'idle' });
-          }}
-          /*
-           * 16px minimum, or iOS Safari zooms the page when the field takes
-           * focus and pushes the plate you are reading off the screen.
-           */
-          className="tap mt-1 w-full border border-rule bg-surface px-3 py-3 text-2xl tracking-[0.12em] text-ink outline-none focus:border-rule-strong"
-          placeholder="ABC 123"
-          maxLength={6}
-          autoCapitalize="characters"
-          autoComplete="off"
-          autoCorrect="off"
-          spellCheck={false}
-          enterKeyHint="done"
-          aria-describedby="plate-feedback"
-          aria-invalid={error !== null}
-        />
-
-        <div id="plate-feedback" aria-live="polite" className="mt-2 min-h-[2.5rem] text-sm">
+        <div
+          id="plate-feedback"
+          aria-live="polite"
+          className="mt-3 min-h-[2.5rem] text-center text-sm"
+        >
           {error && <p className="text-warn">{error}</p>}
           {!error && preview && (
             <div className="space-y-1">
@@ -162,11 +188,18 @@ export function LogForm() {
                 Number {preview.ordinal.toLocaleString()} in the sequence. Issued{' '}
                 {preview.era.label}.
               </p>
-              {preview.notable && <NotableBadge notable={preview.notable} showLabel />}
+              {preview.notable && (
+                <div className="flex justify-center">
+                  <NotableBadge notable={preview.notable} showLabel />
+                </div>
+              )}
             </div>
           )}
           {!error && !preview && typed.length > 0 && (
             <p className="text-ink-faint">Keep going — three letters, then three digits.</p>
+          )}
+          {!error && typed.length === 0 && (
+            <p className="text-ink-faint">Type the plate you saw.</p>
           )}
         </div>
       </div>

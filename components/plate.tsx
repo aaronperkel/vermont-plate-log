@@ -1,8 +1,8 @@
 import { PLATE_RATIOS as R } from '@/lib/plate-style';
 
 /*
- * The plate. Used in list rows, as the hero on the log screen, and full width
- * on a detail page — the same markup every time.
+ * The plate. Used in list rows, as the face of the field on the log screen, and
+ * full width on a detail page — the same markup every time.
  *
  * Scale comes from one custom property. `--plate-w` sets the width, the font
  * size is pinned to 1% of it, and every internal dimension is expressed in em.
@@ -25,12 +25,32 @@ type PlateProps = {
   size?: PlateSize;
   /** Plays the stamp animation once. Used to confirm a save, nothing else. */
   stamped?: boolean;
+  /**
+   * Serial to show faintly while `plate` is empty, the way a placeholder sits
+   * in an empty input. Only the log field passes this.
+   */
+  placeholder?: string;
+  /**
+   * Drop out of the accessibility tree. Set when the plate is the visible face
+   * of a real input, which already carries the label and the value.
+   */
+  decorative?: boolean;
   className?: string;
 };
 
-export function Plate({ plate, size = 'row', stamped = false, className = '' }: PlateProps) {
-  const letters = plate.slice(0, 3).padEnd(3, ' ');
-  const digits = plate.slice(3, 6).padEnd(3, ' ');
+export function Plate({
+  plate,
+  size = 'row',
+  stamped = false,
+  placeholder,
+  decorative = false,
+  className = '',
+}: PlateProps) {
+  /* Empty and given a placeholder: show that instead, at placeholder strength. */
+  const ghost = plate.length === 0 && placeholder !== undefined;
+  const serial = ghost ? placeholder.replace(/[^a-zA-Z0-9]/g, '').toUpperCase() : plate;
+  const letters = serial.slice(0, 3).padEnd(3, ' ');
+  const digits = serial.slice(3, 6).padEnd(3, ' ');
 
   return (
     <div
@@ -44,8 +64,15 @@ export function Plate({ plate, size = 'row', stamped = false, className = '' }: 
         background: 'var(--plate-green)',
         borderRadius: `${R.radius * 100}em`,
       }}
-      role="img"
-      aria-label={plate.trim().length === 6 ? `Vermont plate ${letters} ${digits}` : 'Vermont plate'}
+      role={decorative ? undefined : 'img'}
+      aria-hidden={decorative || undefined}
+      aria-label={
+        decorative
+          ? undefined
+          : plate.trim().length === 6
+            ? `Vermont plate ${letters} ${digits}`
+            : 'Vermont plate'
+      }
     >
       {/* The thin keyline, inset from the edge the way the stamping die leaves it. */}
       <div
@@ -96,7 +123,11 @@ export function Plate({ plate, size = 'row', stamped = false, className = '' }: 
            * it from reading as a drop shadow. Measured in em, so it fades to
            * nothing at row size instead of smearing.
            */
-          textShadow: `0 0.022em 0.004em var(--plate-green-shadow), 0 -0.014em 0.004em var(--plate-green-light)`,
+          textShadow: ghost
+            ? 'none'
+            : `0 0.022em 0.004em var(--plate-green-shadow), 0 -0.014em 0.004em var(--plate-green-light)`,
+          /* A placeholder is not stamped metal, so it loses the emboss as well as the weight. */
+          opacity: ghost ? 0.38 : 1,
         }}
       >
         {letters}
