@@ -449,9 +449,8 @@ export function estimateIssuanceEra(plate: string, now: Date = new Date()): Issu
       latest: msToMonth(centre + slack),
       confidence: 'projected',
       caveat:
-        `Past the newest confirmed sighting (the ${newest.block} block, ${seasonOf(newest.observed)}), so this is the ` +
-        `observed rate of about ${Math.round(rate)} plates a day carried forward. The further past the last anchor, ` +
-        'the softer the estimate.',
+        `Past the newest confirmed sighting (${seasonOf(newest.observed)}), so this is the observed rate of about ` +
+        `${Math.round(rate)} plates a day carried forward. The further past that sighting, the softer the estimate.`,
     });
   }
 
@@ -471,14 +470,18 @@ export function estimateIssuanceEra(plate: string, now: Date = new Date()): Issu
   const centre = monthToMs(older.observed) + days * MS_PER_DAY;
   const slack = 90 * MS_PER_DAY;
 
+  const from = seasonOf(older.observed);
+  const to = seasonOf(newer.observed);
+  // Anchors can land in the same season, and 'late 2026 and late 2026' reads as a mistake.
+  const between = from === to ? `both in ${from}` : `${from} and ${to}`;
+
   return clampToSeries({
     earliest: msToMonth(centre - slack),
     latest: msToMonth(centre + slack),
     confidence: 'interpolated',
     caveat:
-      `Interpolated between two confirmed sightings, the ${older.block} block in ${seasonOf(older.observed)} and the ` +
-      `${newer.block} block in ${seasonOf(newer.observed)}. That assumes a steady rate of about ${Math.round(rate)} ` +
-      'plates a day across the gap, which is an assumption, not a record.',
+      `Interpolated between two confirmed sightings, ${between}. That assumes a steady rate of about ` +
+      `${Math.round(rate)} plates a day across the gap, which is an assumption, not a record.`,
   });
 }
 

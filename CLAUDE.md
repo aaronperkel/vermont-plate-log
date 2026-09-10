@@ -35,6 +35,13 @@ is no second kind of row. Charts and the sequence line take their scale from `AN
 the axis domain, and never draw or name them — a labelled position reads as a plate somebody
 logged, which is the one thing an empty collection must not show.
 
+That extends to prose. No user-visible text may name a specific plate or block that is not in
+the collection, and the era caveats in `lib/plate.ts` are where this is easiest to get wrong:
+describe an anchor by date ("the newest confirmed sighting, late 2026"), never by block. Two
+deliberate exceptions, both of which read as format rather than as a sighting: the `ABC 123`
+hint in the log form and `lib/validation.ts`, and the Gaps grid, which labels every prefix
+`AA`–`ZZ` in tooltips and marks the unlogged ones as unlogged.
+
 **A block is 999 plates.** The numeric run is `001`–`999`; there is no `000`.
 
 **The plate exists twice.** `components/plate.tsx` uses Tailwind and custom properties;
