@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Plate } from '@/components/plate';
 import { SequenceLine } from '@/components/sequence-line';
 import { NotableBadge } from '@/components/notable-badge';
-import { clockTime, longDate } from '@/lib/dates';
+import { clockTime, longDate, today } from '@/lib/dates';
 import { notableFor } from '@/lib/notable';
 import { ALPHABET, estimateIssuanceEra, format, parse, toOrdinal, validate } from '@/lib/plate';
 import { SPOTTERS, type Sighting, type Spotter } from '@/db/schema';
@@ -29,10 +29,6 @@ type Status =
   | { kind: 'error'; message: string };
 
 const SPOTTER_LABELS: Record<Spotter, string> = { aaron: 'Aaron', riley: 'Riley' };
-
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 /*
  * The whole grammar of the field: six alphanumerics, upper case.
