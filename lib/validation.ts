@@ -25,3 +25,17 @@ export const sightingCreateSchema = z.object({
 });
 
 export type SightingCreate = z.infer<typeof sightingCreateSchema>;
+
+/*
+ * Editing after the fact only ever touches the note. A plate entered wrong is
+ * deleted and logged again, because `ordinal` is derived from the plate on
+ * insert and nothing rewrites it.
+ *
+ * Required, but allowed to be empty: '' is how a note is cleared, and the route
+ * stores that as null.
+ */
+export const sightingUpdateSchema = z.object({
+  notes: z.string().trim().max(500, 'A note runs to 500 characters.'),
+});
+
+export type SightingUpdate = z.infer<typeof sightingUpdateSchema>;

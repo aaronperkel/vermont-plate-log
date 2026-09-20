@@ -162,6 +162,13 @@ estimate and the first name of whoever logged it. It renders for any valid plate
 anyone has spotted it, so the URL space reveals nothing about the collection, and there is no
 navigation from it into the gated views.
 
+The **note** is the one thing on that page the password withholds. A note is written for the two
+of us and a link to a plate gets forwarded, so it renders only when you are signed in, and never
+in the metadata or the Open Graph image. The controls that write one — add a note, and remove
+the sighting — are on that page too, behind the same check. The API routes they call are gated
+by `proxy.ts` like everything else under `/api`, so the check on the page is about what to draw,
+not about what is allowed.
+
 Two people, one password, so there is no user table. `spotted_by` is a choice on the form, not
 an identity.
 
@@ -171,6 +178,11 @@ Denormalised from `toOrdinal` on insert. SQL cannot derive it — sorting the pl
 lexically orders over all 26 ASCII letters while Vermont's sequence runs through 22 — and both
 the collection ordering and the gaps view's range scans need it. `lib/plate.ts` stays the source
 of truth; nothing writes that column by hand.
+
+Which is also why nothing edits the plate on an existing row: the ordinal beside it would be the
+old plate's, and it would stay plausible while sorting wrong. Editing after the fact only ever
+touches the note. A plate read wrong is removed and logged again — deleting the row releases the
+unique index on `plate`, so the second attempt saves rather than coming back as a duplicate.
 
 ## Commands
 

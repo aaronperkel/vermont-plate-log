@@ -5,6 +5,8 @@ import { Plate } from '@/components/plate';
 import { NotableBadge } from '@/components/notable-badge';
 import { SequenceLine } from '@/components/sequence-line';
 import { ShareButton } from '@/components/share-button';
+import { SightingActions } from '@/components/sighting-actions';
+import { isSignedIn } from '@/lib/auth';
 import { clockTime, longDate, shortDate } from '@/lib/dates';
 import { notableFor } from '@/lib/notable';
 import { estimateIssuanceEra, format, parse, toOrdinal, validate } from '@/lib/plate';
@@ -21,6 +23,11 @@ const SPOTTERS: Record<string, string> = { aaron: 'Aaron', riley: 'Riley' };
  * It renders for any valid plate whether or not anyone has logged it, which is
  * what makes it safe to leave open: the URL space says nothing about what is in
  * the collection, and there is no way from here into the gated views.
+ *
+ * The note is the one thing on it the password withholds, along with the
+ * controls that write one. A note is written for the two of us, and a link to
+ * this page gets forwarded — so it stays out of the page, out of the metadata
+ * below, and out of the Open Graph image.
  */
 
 async function load(raw: string): Promise<{ plate: string; sighting: Sighting | null }> {
@@ -51,6 +58,7 @@ export async function generateMetadata({
 
 export default async function PlatePage({ params }: { params: Promise<{ plate: string }> }) {
   const { plate, sighting } = await load((await params).plate);
+  const signedIn = await isSignedIn();
   const ordinal = toOrdinal(plate);
   const era = estimateIssuanceEra(plate);
   const notable = notableFor(plate);
@@ -93,17 +101,24 @@ export default async function PlatePage({ params }: { params: Promise<{ plate: s
 
         <div className="border-t border-rule pt-4">
           {sighting ? (
-            <p className="text-sm text-ink-soft">
-              Spotted by{' '}
-              <span className="font-medium text-ink">{SPOTTERS[sighting.spottedBy]}</span>
-              {sighting.location ? ` at ${sighting.location}` : ''} on{' '}
-              {longDate(sighting.spottedAt)}, at {clockTime(sighting.createdAt)}.
-              {sighting.notes ? ` ${sighting.notes}` : ''}
-            </p>
+            <>
+              <p className="text-sm text-ink-soft">
+                Spotted by{' '}
+                <span className="font-medium text-ink">{SPOTTERS[sighting.spottedBy]}</span>
+                {sighting.location ? ` at ${sighting.location}` : ''} on{' '}
+                {longDate(sighting.spottedAt)}, at {clockTime(sighting.createdAt)}.
+              </p>
+              {/* Its own paragraph: a note is a second thought, not a clause. */}
+              {signedIn && sighting.notes && (
+                <p className="mt-2 max-w-prose text-sm text-ink">{sighting.notes}</p>
+              )}
+            </>
           ) : (
             <p className="text-sm text-ink-soft">Nobody has logged this one.</p>
           )}
         </div>
+
+        {signedIn && sighting && <SightingActions sighting={sighting} />}
 
         <div className="flex items-center gap-3 border-t border-rule pt-4">
           <ShareButton url={`/plate/${plate}`} title={`${format(plate)} — Plate log`} />

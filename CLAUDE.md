@@ -66,6 +66,11 @@ build runs `db:backfill` after `db:migrate`, and a Vercel deploy reconciles the 
 way it applies migrations. The backfill is idempotent, so every deploy that changes nothing costs
 one query and prints one line.
 
+For the same reason **no edit ever changes the plate on an existing row** — the ordinal beside it
+would then be the old plate's. `PATCH /api/sightings/[id]` touches `notes` and nothing else. A
+plate logged wrong is deleted and logged again; removing the row releases the unique index on
+`plate`, so the second attempt saves instead of returning the 409.
+
 ## Conventions
 
 Matches `../funko`, the newest project in this folder.

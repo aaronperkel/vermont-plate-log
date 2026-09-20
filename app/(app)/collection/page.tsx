@@ -41,6 +41,12 @@ function Row({ sighting }: { sighting: Sighting }) {
             </span>
           </div>
           <p className="mt-1 text-sm text-ink-soft">{describe(sighting)}</p>
+          {/*
+            The note, kept out of describe() so that stays one sentence. This
+            page is behind the password; the plate's own page is not, and hides
+            the note from anyone who has only been sent the link.
+          */}
+          {sighting.notes && <p className="mt-1 text-sm text-ink">{sighting.notes}</p>}
           {notable && (
             <div className="mt-2">
               <NotableBadge notable={notable} />
