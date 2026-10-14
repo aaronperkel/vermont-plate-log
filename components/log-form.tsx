@@ -143,6 +143,19 @@ export function LogForm() {
               if (status.kind !== 'idle' && status.kind !== 'saving') setStatus({ kind: 'idle' });
             }}
             /*
+             * Return finishes the plate, not the sighting. Left to the browser it
+             * submits the form, and the plate is the first thing typed: whoever
+             * is holding the phone has not picked their name yet, so it would
+             * save under the default. Blurring puts the keyboard away instead,
+             * which is what the "done" key promises, and leaves the spotter
+             * buttons in reach.
+             */
+            onKeyDown={(e) => {
+              if (e.key !== 'Enter') return;
+              e.preventDefault();
+              e.currentTarget.blur();
+            }}
+            /*
              * Transparent rather than hidden: display:none or a zero-size box
              * loses the caret on iOS and stops the keyboard opening on focus.
              * 16px is what keeps Safari from zooming the page on that focus and
