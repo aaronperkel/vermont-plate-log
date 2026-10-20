@@ -30,7 +30,7 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
 
   if (isPublic(pathname)) return NextResponse.next();
 
-  if (await verifySessionToken(request.cookies.get(SESSION_COOKIE)?.value)) {
+  if ((await verifySessionToken(request.cookies.get(SESSION_COOKIE)?.value)) !== null) {
     return NextResponse.next();
   }
 

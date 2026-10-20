@@ -8,10 +8,9 @@ import { sightingUpdateSchema } from '@/lib/validation';
  * Editing and removing one row.
  *
  * No auth check here. proxy.ts denies by default and /api/sightings is not one
- * of its holes, so an unauthenticated call never reaches this file — the same
- * reason POST has no check either. Two people share one password and
- * spotted_by is a choice on a form rather than an identity, so there is no
- * "did you log this" question to ask.
+ * of its holes, so an unauthenticated call never reaches this file. spotted_by
+ * is whoever signed in, but the log belongs to both people, so there is no
+ * "did you log this" question to ask before a note is edited or a row removed.
  *
  * Both verbs use .returning() to tell a real row from a stale id, which saves
  * the read that would otherwise come first.

@@ -1,6 +1,7 @@
 import { getDb } from '@/db';
 import { type Sighting, sightings } from '@/db/schema';
 import { jsonError, jsonOk, parseJsonBody, withErrorHandling } from '@/lib/api';
+import { currentSpotter } from '@/lib/auth';
 import { toOrdinal } from '@/lib/plate';
 import { findByPlate, listSightings } from '@/lib/queries/sightings';
 import { sightingCreateSchema } from '@/lib/validation';
@@ -19,7 +20,15 @@ export async function POST(request: Request) {
     const body = await parseJsonBody(request, sightingCreateSchema);
     if (!body.ok) return body.response;
 
-    const { plate, spottedBy, spottedAt, location, notes } = body.data;
+    const { plate, spottedAt, location, notes } = body.data;
+
+    /*
+     * Who logged it is whoever signed in on this phone, never a field in the
+     * body. proxy.ts already turns away anyone without a session, so the null
+     * branch is belt and braces for a token that expired between the two.
+     */
+    const spottedBy = await currentSpotter();
+    if (!spottedBy) return jsonError('Sign in first.', 401);
 
     /*
      * Checked before inserting so the response can name who logged it and

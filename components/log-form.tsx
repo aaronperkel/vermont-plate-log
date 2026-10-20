@@ -9,7 +9,7 @@ import { NotableBadge } from '@/components/notable-badge';
 import { clockTime, longDate, today } from '@/lib/dates';
 import { notableFor } from '@/lib/notable';
 import { ALPHABET, estimateIssuanceEra, format, parse, toOrdinal, validate } from '@/lib/plate';
-import { SPOTTERS, type Sighting, type Spotter } from '@/db/schema';
+import { type Sighting, type Spotter } from '@/db/schema';
 
 /*
  * The log screen.
@@ -19,6 +19,10 @@ import { SPOTTERS, type Sighting, type Spotter } from '@/db/schema';
  * to be a tool. The plate renders as you type, the ordinal and era appear
  * before you commit to anything, and the submit button sits low enough to
  * reach with a thumb.
+ *
+ * Who is logging is not a choice here. It is whoever signed in on this phone,
+ * passed down from the page and stamped by the server, so there is nothing on
+ * this screen that can be left on the wrong setting.
  */
 
 type Status =
@@ -59,10 +63,9 @@ function liveError(typed: string): string | null {
   return result.ok ? null : result.message;
 }
 
-export function LogForm() {
+export function LogForm({ spotter }: { spotter: Spotter }) {
   const router = useRouter();
   const [typed, setTyped] = useState('');
-  const [spottedBy, setSpottedBy] = useState<Spotter>('aaron');
   const [spottedAt, setSpottedAt] = useState(today);
   const [location, setLocation] = useState('');
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
@@ -94,7 +97,7 @@ export function LogForm() {
       const response = await fetch('/api/sightings', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ plate, spottedBy, spottedAt, location }),
+        body: JSON.stringify({ plate, spottedAt, location }),
       });
       const body = await response.json();
 
@@ -113,6 +116,15 @@ export function LogForm() {
       router.refresh();
     } catch {
       setStatus({ kind: 'error', message: 'Could not reach the server. Check your connection and try again.' });
+    }
+  }
+
+  async function signOut() {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } finally {
+      router.replace('/login');
+      router.refresh();
     }
   }
 
@@ -143,19 +155,6 @@ export function LogForm() {
               if (status.kind !== 'idle' && status.kind !== 'saving') setStatus({ kind: 'idle' });
             }}
             /*
-             * Return finishes the plate, not the sighting. Left to the browser it
-             * submits the form, and the plate is the first thing typed: whoever
-             * is holding the phone has not picked their name yet, so it would
-             * save under the default. Blurring puts the keyboard away instead,
-             * which is what the "done" key promises, and leaves the spotter
-             * buttons in reach.
-             */
-            onKeyDown={(e) => {
-              if (e.key !== 'Enter') return;
-              e.preventDefault();
-              e.currentTarget.blur();
-            }}
-            /*
              * Transparent rather than hidden: display:none or a zero-size box
              * loses the caret on iOS and stops the keyboard opening on focus.
              * 16px is what keeps Safari from zooming the page on that focus and
@@ -167,7 +166,7 @@ export function LogForm() {
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
-            enterKeyHint="done"
+            enterKeyHint="go"
             aria-label="Plate"
             aria-describedby="plate-feedback"
             aria-invalid={error !== null}
@@ -213,26 +212,17 @@ export function LogForm() {
         </div>
       </div>
 
-      <fieldset>
-        <legend className="text-sm font-medium text-ink">Spotted by</legend>
-        <div className="mt-1 flex gap-2">
-          {SPOTTERS.map((who) => (
-            <button
-              key={who}
-              type="button"
-              onClick={() => setSpottedBy(who)}
-              aria-pressed={spottedBy === who}
-              className={`tap flex-1 border px-4 py-2.5 text-sm ${
-                spottedBy === who
-                  ? 'border-plate-green bg-plate-green text-plate-white'
-                  : 'border-rule bg-surface text-ink-soft'
-              }`}
-            >
-              {SPOTTER_LABELS[who]}
-            </button>
-          ))}
-        </div>
-      </fieldset>
+      {/*
+        Where the name picker used to be. The name is fixed for the session, so
+        the only thing worth showing is which one, and the way out if it is the
+        wrong phone.
+      */}
+      <p className="text-sm text-ink-soft">
+        Logging as {SPOTTER_LABELS[spotter]}.{' '}
+        <button type="button" onClick={signOut} className="tap underline underline-offset-2">
+          Sign out
+        </button>
+      </p>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div>

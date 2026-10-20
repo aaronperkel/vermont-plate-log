@@ -169,8 +169,9 @@ the sighting — are on that page too, behind the same check. The API routes the
 by `proxy.ts` like everything else under `/api`, so the check on the page is about what to draw,
 not about what is allowed.
 
-Two people, one password, so there is no user table. `spotted_by` is a choice on the form, not
-an identity.
+Two people, one password, so there is no user table. Signing in takes a name beside that
+password, the session carries the name, and the API stamps `spotted_by` from the session rather
+than from anything the form sends. The log screen has no way to pick a person.
 
 ### The `ordinal` column
 

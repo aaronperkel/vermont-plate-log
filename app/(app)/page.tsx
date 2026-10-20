@@ -1,4 +1,6 @@
+import { redirect } from 'next/navigation';
 import { LogForm } from '@/components/log-form';
+import { currentSpotter } from '@/lib/auth';
 import { countSightings } from '@/lib/queries/sightings';
 
 export const dynamic = 'force-dynamic';
@@ -6,6 +8,10 @@ export const dynamic = 'force-dynamic';
 export const metadata = { title: 'Log a plate' };
 
 export default async function LogPage() {
+  // proxy.ts has already checked; this is for the type, and for a token that expired in between.
+  const spotter = await currentSpotter();
+  if (!spotter) redirect('/login');
+
   const total = await countSightings();
 
   return (
@@ -19,7 +25,7 @@ export default async function LogPage() {
         </p>
       </div>
 
-      <LogForm />
+      <LogForm spotter={spotter} />
     </div>
   );
 }

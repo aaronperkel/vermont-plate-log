@@ -15,7 +15,10 @@ function required(name: string): string {
 }
 
 export const env = {
-  /** The single shared password. Two people use this app; there is no user table. */
+  /*
+   * The single shared password. Two people use this app and there is no user
+   * table; the name typed beside the password at sign-in is the identity.
+   */
   get appPassword(): string {
     return required('APP_PASSWORD');
   },

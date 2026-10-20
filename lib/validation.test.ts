@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sightingUpdateSchema } from './validation';
+import { sightingCreateSchema, sightingUpdateSchema } from './validation';
 
 /*
  * The one seam in the edit path that is a pure function. Everything else it
@@ -38,5 +38,24 @@ describe('sightingUpdateSchema', () => {
     const tooLong = sightingUpdateSchema.safeParse({ notes: 'x'.repeat(501) });
     expect(tooLong.success).toBe(false);
     expect(tooLong.error?.issues[0]?.message).toBe('A note runs to 500 characters.');
+  });
+});
+
+/*
+ * The spotter is not a field. It comes from the session on the server, so a
+ * body that tries to name one is accepted and the name is dropped on the floor
+ * rather than honoured.
+ */
+describe('sightingCreateSchema', () => {
+  it('does not take or require spottedBy', () => {
+    const parsed = sightingCreateSchema.parse({ plate: 'ABC 123', spottedAt: '2026-10-20' });
+    expect(parsed).not.toHaveProperty('spottedBy');
+
+    const withName = sightingCreateSchema.parse({
+      plate: 'ABC 123',
+      spottedAt: '2026-10-20',
+      spottedBy: 'riley',
+    });
+    expect(withName).not.toHaveProperty('spottedBy');
   });
 });
