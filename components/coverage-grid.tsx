@@ -11,7 +11,7 @@ import { ALPHABET, BLOCK_SIZE, LEGACY_ALPHABET, blocksInPrefix, toOrdinal } from
  *
  * Not every cell is a prefix Vermont issued. Before late 2023 the sequence ran
  * through 19 letters, so the earlier prefixes containing V or Z were stepped
- * over and are left blank rather than counted as gaps — see blocksInPrefix.
+ * over and are shaded grey rather than counted as gaps — see blocksInPrefix.
  * The same is why a prefix is 19,000 plates on one side of the activation and
  * 21,000 on the other.
  *
@@ -84,7 +84,7 @@ export function CoverageGrid({
                 const style = count
                   ? 'bg-plate-green border-plate-green'
                   : !issued
-                    ? 'border-transparent'
+                    ? 'bg-rule-strong border-rule-strong'
                     : inSpan
                       ? 'border-plate-green/40'
                       : 'border-rule/60';
@@ -97,7 +97,7 @@ export function CoverageGrid({
                         count
                           ? `${prefix} — ${count} logged`
                           : !issued
-                            ? `${prefix} — never issued, the sequence passed it before V and Z were in use`
+                            ? `${prefix} — doesn't exist, the sequence passed it before V and Z were in use`
                             : inSpan
                               ? `${prefix} — inside your run, nothing logged`
                               : `${prefix} — outside your run`

@@ -126,7 +126,7 @@ estimate near it without touching the estimator. Only put first-hand observation
   `ALPHABET` between `T` and `V` and let a deploy run the backfill, because **every stored ordinal
   moves**. The `U` words removed from `lib/notable.ts` are listed there to restore.
 - **Gaps skips prefixes that were never issued.** The grid is 21 × 21, but before the activation
-  only 19 × 19 of those prefixes existed, so pre-2023 prefixes containing `V` or `Z` are blank,
+  only 19 × 19 of those prefixes existed, so pre-2023 prefixes containing `V` or `Z` are shaded grey,
   never counted as gaps, and never split a run. A prefix is 19,000 plates before the activation
   and 21,000 from it on; `blocksInPrefix` in `lib/plate.ts` decides which.
 - **Some notable combinations can never be found.** States run blocklists against sequential
