@@ -3,9 +3,9 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 /*
- * Sightings bucketed by first letter, across all 22 letters Vermont uses.
+ * Sightings bucketed by first letter, across all 21 letters Vermont uses.
  *
- * All 22 are shown even when most are empty: the gaps are the information. A
+ * All 21 are shown even when most are empty: the gaps are the information. A
  * chart of only the letters you have seen would hide how narrow the collection
  * is. One hue throughout — a colour per letter would imply a meaning the
  * letters do not carry.

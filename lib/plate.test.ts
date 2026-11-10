@@ -7,6 +7,7 @@ import {
   SEQUENCE_SIZE,
   SERIES_START_MONTH,
   blockOf,
+  blocksInPrefix,
   containsPostActivationLetter,
   estimateIssuanceEra,
   format,
@@ -18,20 +19,20 @@ import {
 } from './plate';
 
 describe('the alphabet', () => {
-  it('has 22 letters and excludes I, J, O and Q', () => {
-    expect(ALPHABET).toHaveLength(22);
-    for (const letter of 'IJOQ') expect(ALPHABET).not.toContain(letter);
+  it('has 21 letters and excludes I, J, O, Q and U', () => {
+    expect(ALPHABET).toHaveLength(21);
+    for (const letter of 'IJOQU') expect(ALPHABET).not.toContain(letter);
   });
 
-  it('legacy is the modern alphabet minus U, V and Z', () => {
+  it('legacy is the modern alphabet minus V and Z', () => {
     expect(LEGACY_ALPHABET).toHaveLength(19);
-    expect([...ALPHABET].filter((l) => !'UVZ'.includes(l)).join('')).toBe(LEGACY_ALPHABET);
+    expect([...ALPHABET].filter((l) => !'VZ'.includes(l)).join('')).toBe(LEGACY_ALPHABET);
   });
 
   it('keeps the new letters in alphabetical position rather than appended', () => {
-    // The whole ordinal quirk depends on this. If U ever moves to the end, the
-    // "AAU 001 looks early" behaviour disappears and this test should fail.
-    expect(ALPHABET.indexOf('U')).toBeLessThan(ALPHABET.indexOf('W'));
+    // The whole ordinal quirk depends on this. If V ever moves to the end, the
+    // "AAV 001 looks early" behaviour disappears and this test should fail.
+    expect(ALPHABET.indexOf('V')).toBeLessThan(ALPHABET.indexOf('W'));
     expect(ALPHABET.indexOf('Z')).toBe(ALPHABET.length - 1);
     expect([...ALPHABET].every((l, i, a) => i === 0 || a[i - 1] < l)).toBe(true);
   });
@@ -71,6 +72,7 @@ describe('validate', () => {
     ['JAA123', 'J'],
     ['OAA123', 'O'],
     ['QAA123', 'Q'],
+    ['KUA123', 'U'],
   ])('rejects %s because of %s', (plate, letter) => {
     const result = validate(plate);
     expect(result.ok).toBe(false);
@@ -86,7 +88,7 @@ describe('validate', () => {
   });
 
   it('accepts the post-activation letters', () => {
-    for (const plate of ['AAU001', 'AAV001', 'AAZ001', 'UVZ999']) {
+    for (const plate of ['AAV001', 'AAZ001', 'KVZ999', 'ZVZ999']) {
       expect(validate(plate).ok).toBe(true);
     }
   });
@@ -97,7 +99,7 @@ describe('ordinals', () => {
     expect(toOrdinal('AAA000')).toBe(1);
     expect(toOrdinal('AAA001')).toBe(2);
     expect(toOrdinal('ZZZ999')).toBe(SEQUENCE_SIZE);
-    expect(SEQUENCE_SIZE).toBe(22 ** 3 * 1000);
+    expect(SEQUENCE_SIZE).toBe(21 ** 3 * 1000);
   });
 
   it('uses 1000 plates per block, and 000 is the first of them', () => {
@@ -115,7 +117,7 @@ describe('ordinals', () => {
   });
 
   it('increases strictly across a hand-ordered list', () => {
-    const ordered = ['AAA000', 'AAA001', 'AAA002', 'AAA999', 'AAB000', 'AAB001', 'AAU001', 'AAZ999', 'ABA001', 'KPZ451', 'KXB000', 'LAX123', 'ZZZ999'];
+    const ordered = ['AAA000', 'AAA001', 'AAA002', 'AAA999', 'AAB000', 'AAB001', 'AAV001', 'AAZ999', 'ABA001', 'KPZ451', 'KXB000', 'LAX123', 'ZZZ999'];
     const ordinals = ordered.map(toOrdinal);
     for (let i = 1; i < ordinals.length; i += 1) {
       expect(ordinals[i]).toBeGreaterThan(ordinals[i - 1]);
@@ -134,20 +136,20 @@ describe('ordinals', () => {
 });
 
 describe('the legacy ordinal', () => {
-  it('is null for plates containing U, V or Z', () => {
-    for (const plate of ['AAU001', 'AAV001', 'AAZ001', 'KPZ451']) {
+  it('is null for plates containing V or Z', () => {
+    for (const plate of ['AAV001', 'AAZ001', 'KPV001', 'KPZ451']) {
       expect(toLegacyOrdinal(plate)).toBeNull();
       expect(containsPostActivationLetter(plate)).toBe(true);
     }
   });
 
-  it('counts fewer plates than the modern ordinal, because U/V/Z blocks never issued', () => {
+  it('counts fewer plates than the modern ordinal, because V/Z blocks never issued', () => {
     // The gap is the whole point: modern ordinals overcount the past.
     const modern = toOrdinal('KPA001');
     const legacy = toLegacyOrdinal('KPA001');
     expect(legacy).not.toBeNull();
     expect(legacy!).toBeLessThan(modern);
-    expect(modern - legacy!).toBeGreaterThan(1_000_000);
+    expect(modern - legacy!).toBeGreaterThan(600_000);
   });
 
   it('agrees with the modern ordinal at the very start', () => {
@@ -186,13 +188,13 @@ describe('anchors', () => {
 describe('estimateIssuanceEra', () => {
   const now = new Date('2026-09-09T00:00:00Z');
 
-  it('flags the U/V/Z contradiction instead of returning a 1990s date', () => {
-    const era = estimateIssuanceEra('AAU001', now);
+  it('flags the V/Z contradiction instead of returning a 1990s date', () => {
+    const era = estimateIssuanceEra('AAV001', now);
     expect(era.confidence).toBe('contradictory');
     expect(era.earliest >= '2023-11').toBe(true);
-    expect(era.caveat).toContain('U');
+    expect(era.caveat).toContain('V');
     // The ordinal really is near the start — that is what makes it a trap.
-    expect(toOrdinal('AAU001')).toBeLessThan(20_000);
+    expect(toOrdinal('AAV001')).toBeLessThan(20_000);
   });
 
   it('interpolates between the anchors', () => {
@@ -221,7 +223,7 @@ describe('estimateIssuanceEra', () => {
   });
 
   it('always returns a range, a label and a caveat', () => {
-    for (const plate of ['AAA001', 'AAU001', 'KYG499', 'LBA001', 'ZZZ999']) {
+    for (const plate of ['AAA001', 'AAV001', 'KYG499', 'LBA001', 'ZZZ999']) {
       const era = estimateIssuanceEra(plate, now);
       expect(era.earliest <= era.latest).toBe(true);
       expect(era.label.length).toBeGreaterThan(0);
@@ -234,7 +236,7 @@ describe('estimateIssuanceEra', () => {
     // KPZ 451 and the KPV series were seen at the activation. A block midpoint
     // sits above half its own block, so comparing against it rather than
     // against the activation zone flags the anchor plate as impossible.
-    for (const plate of ['KPU100', 'KPV001', 'KPZ451', 'KPZ999']) {
+    for (const plate of ['KPT100', 'KPV001', 'KPZ451', 'KPZ999']) {
       const era = estimateIssuanceEra(plate, now);
       expect(era.confidence).toBe('interpolated');
       expect(era.earliest <= '2023-11' && era.latest >= '2023-11').toBe(true);
@@ -249,9 +251,28 @@ describe('estimateIssuanceEra', () => {
 
   it('covers all four regimes', () => {
     const seen = new Set(
-      ['AAU001', 'BAA001', 'KYG499', 'LBA001'].map((p) => estimateIssuanceEra(p, now).confidence),
+      ['AAV001', 'BAA001', 'KYG499', 'LBA001'].map((p) => estimateIssuanceEra(p, now).confidence),
     );
     expect(seen).toEqual(new Set(['contradictory', 'speculative', 'interpolated', 'projected']));
+  });
+});
+
+describe('blocksInPrefix', () => {
+  it('counts 19 blocks for a prefix stamped before the activation', () => {
+    for (const prefix of ['AA', 'AT', 'AW', 'KG', 'KH', 'KN']) expect(blocksInPrefix(prefix)).toBe(19);
+  });
+
+  it('counts nothing for a pre-activation prefix containing V or Z', () => {
+    // The sequence passed these while V and Z did not exist.
+    for (const prefix of ['AV', 'AZ', 'CV', 'DZ', 'HV', 'HZ']) expect(blocksInPrefix(prefix)).toBe(0);
+  });
+
+  it('counts 21 blocks from the activation prefix on, new letters included', () => {
+    for (const prefix of ['KP', 'KR', 'KT', 'KV', 'KZ', 'LA', 'VA', 'ZZ']) expect(blocksInPrefix(prefix)).toBe(21);
+  });
+
+  it('counts nothing for something that is not a prefix', () => {
+    for (const prefix of ['KU', 'UA', 'AO', 'A', 'AAA']) expect(blocksInPrefix(prefix)).toBe(0);
   });
 });
 

@@ -24,11 +24,12 @@ Locally `DATABASE_URL="file:./local.db"` needs no Turso account.
 ordinals and estimates eras as you type with no round trip, and the server computes the stored
 ordinal from the same functions. A dependency there breaks the first half of that.
 
-**Two alphabets, not one.** Vermont slotted `U`, `V` and `Z` into alphabetical order when it
+**Two alphabets, not one.** Vermont slotted `V` and `Z` into alphabetical order when it
 activated them in late 2023 rather than appending them, so a plate containing one computes to an
 early ordinal but cannot predate the activation. `estimateIssuanceEra` reports that as
 `contradictory` and refuses a date. This is not a bug and must not be simplified away — the
-README explains it at length.
+README explains it at length. `U` was not activated with them, whatever some sources say; the
+comment on `ALPHABET` has the evidence and what to do if a `U` plate ever turns up.
 
 **Anchors are blocks, never plates**, and they live in code, never in the database. The sightings
 table only ever holds plates somebody actually saw; there is no reference-row flag because there
@@ -60,7 +61,7 @@ which the serial overrides, putting it several plate-widths off the plate.
 
 **`sightings.ordinal` is denormalised** from `toOrdinal` on insert and never written by hand. SQL
 cannot derive it, because sorting the plate string lexically orders over 26 ASCII letters while
-the sequence uses 22. Which also means changing the ordinal arithmetic silently invalidates every
+the sequence uses 21. Which also means changing the ordinal arithmetic silently invalidates every
 stored value, and nothing warns you: the old numbers stay plausible and just sort wrong. So the
 build runs `db:backfill` after `db:migrate`, and a Vercel deploy reconciles the column the same
 way it applies migrations. The backfill is idempotent, so every deploy that changes nothing costs

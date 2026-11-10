@@ -11,21 +11,30 @@
  */
 
 /*
- * The 22 letters Vermont issues today.
+ * The 21 letters Vermont issues today.
  *
- * I, J, O and Q have never appeared in the sequence and never will — I and O
- * read as 1 and 0, Q reads as O. U, V and Z are recent: they were dormant
- * until late 2023, when Vermont activated them.
+ * I, J, O and Q have never appeared in the sequence — I and O read as 1 and 0,
+ * Q reads as O. V and Z are recent: they were dormant until late 2023, when
+ * Vermont activated them.
  *
- * The critical detail is that the three new letters were slotted into
- * alphabetical order rather than appended to the end. U sits between T and W;
- * Z sits after Y. So the sequence position of a plate containing one of them
- * says nothing about when it was issued — see estimateIssuanceEra.
+ * U is not here, and that is a finding rather than an oversight. One collector
+ * site reports U, V and Z activated together, but its evidence is a V block and
+ * a Z block; nobody has published a U. This log covers years of the sequence
+ * on both sides of the activation, has V and Z as second and third letters,
+ * and has never
+ * once recorded a U, including the whole run where KU would have to sit. If a
+ * U plate ever turns up, put the letter back between T and V and run the
+ * backfill — every stored ordinal moves.
+ *
+ * The critical detail is that the new letters were slotted into alphabetical
+ * order rather than appended to the end. V sits between T and W; Z sits after
+ * Y. So the sequence position of a plate containing one of them says nothing
+ * about when it was issued — see estimateIssuanceEra.
  */
-export const ALPHABET = 'ABCDEFGHKLMNPRSTUVWXYZ';
+export const ALPHABET = 'ABCDEFGHKLMNPRSTVWXYZ';
 
 /*
- * The 19 letters in use before the activation — ALPHABET minus U, V and Z.
+ * The 19 letters in use before the activation — ALPHABET minus V and Z.
  *
  * This is what the sequence actually ran through for the first three decades,
  * and it is the only honest basis for counting how many plates were issued
@@ -34,7 +43,7 @@ export const ALPHABET = 'ABCDEFGHKLMNPRSTUVWXYZ';
 export const LEGACY_ALPHABET = 'ABCDEFGHKLMNPRSTWXY';
 
 /** The letters that did not exist in the sequence before the activation. */
-export const POST_ACTIVATION_LETTERS = 'UVZ';
+export const POST_ACTIVATION_LETTERS = 'VZ';
 
 /*
  * Plates per letter block. The numeric run is 000-999, so a block holds 1000.
@@ -56,7 +65,7 @@ export const POST_ACTIVATION_LETTERS = 'UVZ';
  */
 export const BLOCK_SIZE = 1000;
 
-/** Month the sequence began issuing U, V and Z. Observed, not documented. */
+/** Month the sequence began issuing V and Z. Observed, not documented. */
 export const ACTIVATION_MONTH = '2023-11';
 
 /*
@@ -65,7 +74,7 @@ export const ACTIVATION_MONTH = '2023-11';
  */
 export const SERIES_START_MONTH = '1990-01';
 
-/** Total addressable plates in the modern 22-letter sequence. */
+/** Total addressable plates in the modern 21-letter sequence. */
 export const SEQUENCE_SIZE = ALPHABET.length ** 3 * BLOCK_SIZE;
 
 const CANONICAL = /^[A-Z]{3}[0-9]{3}$/;
@@ -81,6 +90,7 @@ const EXCLUSION_REASONS: Record<string, string> = {
   O: 'it reads as a 0',
   Q: 'it reads as an O',
   J: 'Vermont has never issued it',
+  U: 'Vermont skips it, even since it started issuing V and Z',
 };
 
 // ---------------------------------------------------------------------------
@@ -174,11 +184,11 @@ function blockBase(block: string, alphabet: string): number | null {
 }
 
 /**
- * Position in the modern 22-letter sequence. AAA 000 is 1, ZZZ 999 is the last.
+ * Position in the modern 21-letter sequence. AAA 000 is 1, ZZZ 999 is the last.
  *
  * This is the canonical sort key and the value stored on each sighting. It is
  * NOT a reliable measure of how many plates preceded this one — for a plate
- * issued before 2023 it counts U/V/Z blocks that were skipped at the time.
+ * issued before 2023 it counts V/Z blocks that were skipped at the time.
  * Use toLegacyOrdinal for that.
  */
 export function toOrdinal(plate: string): number {
@@ -188,7 +198,7 @@ export function toOrdinal(plate: string): number {
 
 /**
  * Position in the 19-letter sequence that was actually running before the
- * activation, or null if the plate contains U, V or Z (in which case it has no
+ * activation, or null if the plate contains V or Z (in which case it has no
  * position in that sequence, because those letters did not exist in it).
  *
  * For a pre-2023 plate this is the real count of plates issued before it.
@@ -219,11 +229,28 @@ export function fromOrdinal(ordinal: number): string {
 }
 
 /**
- * True when the plate contains U, V or Z — meaning it could not have been
- * issued before the late-2023 activation, however early its ordinal looks.
+ * True when the plate contains V or Z — meaning it could not have been issued
+ * before the late-2023 activation, however early its ordinal looks.
  */
 export function containsPostActivationLetter(plate: string): boolean {
   return [...blockOf(plate)].some((letter) => POST_ACTIVATION_LETTERS.includes(letter));
+}
+
+/*
+ * How many blocks Vermont actually stamped under a two-letter prefix: the
+ * legacy count before the activation, the modern count from it on, and zero
+ * for a pre-activation prefix that contains V or Z. AV and the like sit in the
+ * modern grid between real prefixes, but the sequence passed that point while
+ * V did not exist, so nothing was ever issued there and nothing ever will be.
+ *
+ * The activation prefix itself counts as modern. Both new letters turned up in
+ * it, so it ran at least partly in the 21-letter alphabet, and that matches
+ * where activationZoneStart draws the line.
+ */
+export function blocksInPrefix(prefix: string): number {
+  if (prefix.length !== 2 || ![...prefix].every((letter) => ALPHABET.includes(letter))) return 0;
+  if (blockBase(`${prefix}A`, ALPHABET)! + 1 >= activationZoneStart()) return ALPHABET.length;
+  return [...prefix].every((letter) => LEGACY_ALPHABET.includes(letter)) ? LEGACY_ALPHABET.length : 0;
 }
 
 // ---------------------------------------------------------------------------
@@ -281,7 +308,7 @@ function anchorHigh(anchor: Anchor): number {
 }
 
 /*
- * Where the sequence had reached when U, V and Z were switched on.
+ * Where the sequence had reached when V and Z were switched on.
  *
  * The oldest anchor is the activation itself, and it was observed partway
  * through its two-letter prefix (both KPV and KPZ were in circulation), so the
@@ -323,11 +350,11 @@ export function currentRate(): number {
 }
 
 /*
- * How many plates had been issued in total when U, V and Z were switched on.
+ * How many plates had been issued in total when V and Z were switched on.
  *
  * The activation happened partway through the first anchor's two-letter prefix,
  * so the legacy ordinal at the start of that prefix is the closest available
- * figure. It runs low by at most one prefix — around 21,000 plates, or roughly
+ * figure. It runs low by at most one prefix — around 19,000 plates, or roughly
  * 100 days — which is comfortably inside the uncertainty band that any estimate
  * relying on this value already carries.
  *
@@ -411,7 +438,7 @@ function labelFor(earliest: string, latest: string): string {
  * confidence field says how much of a guess it is. Four regimes:
  *
  *   contradictory  The ordinal lands before the activation but the plate
- *                  contains U, V or Z, which did not exist then. The ordinal is
+ *                  contains V or Z, which did not exist then. The ordinal is
  *                  meaningless for this plate; all that can be said is "after
  *                  the activation". This is the case the whole two-ordinal
  *                  design exists to catch.
@@ -527,7 +554,7 @@ function estimateBackwards(ordinal: number, plate: string): Omit<IssuanceEra, 'l
     caveat:
       'Extrapolated backwards past the oldest confirmed sighting, using the recent issuance rate as a stand-in for a ' +
       'historical one that was never recorded. Counted in the pre-2023 19-letter sequence, since the modern ordinal ' +
-      'includes U, V and Z blocks that were skipped when this plate was issued. Treat the decade as a hint and the ' +
+      'includes V and Z blocks that were skipped when this plate was issued. Treat the decade as a hint and the ' +
       'year as noise.',
   };
 }

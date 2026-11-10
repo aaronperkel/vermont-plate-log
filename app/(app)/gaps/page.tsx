@@ -1,5 +1,12 @@
 import Link from 'next/link';
-import { CoverageGrid, PREFIX_SIZE, allPrefixes, prefixRange, unseenRuns } from '@/components/coverage-grid';
+import {
+  CoverageGrid,
+  LEGACY_PREFIX_SIZE,
+  PREFIX_SIZE,
+  issuedPrefixes,
+  prefixRange,
+  unseenRuns,
+} from '@/components/coverage-grid';
 import { EmptyState, Section } from '@/components/ui';
 import { format } from '@/lib/plate';
 import { listSightings } from '@/lib/queries/sightings';
@@ -21,7 +28,7 @@ export default async function GapsPage() {
     sightings.length > 1 ? [sightings[0].ordinal, sightings[sightings.length - 1].ordinal] : null;
 
   const inSpan = span
-    ? allPrefixes().filter((p) => {
+    ? issuedPrefixes().filter((p) => {
         const [low, high] = prefixRange(p);
         return high >= span[0] && low <= span[1];
       })
@@ -34,8 +41,9 @@ export default async function GapsPage() {
       <div>
         <h1 className="text-xl font-semibold text-ink">Gaps</h1>
         <p className="mt-1 max-w-prose text-sm text-ink-soft">
-          Every two-letter prefix Vermont can issue, from AA to ZZ. Each square stands for about{' '}
-          {PREFIX_SIZE.toLocaleString()} plates — roughly a hundred days of issuing.
+          Every two-letter prefix from AA to ZZ. Each square stands for{' '}
+          {LEGACY_PREFIX_SIZE.toLocaleString()} plates before late 2023 and{' '}
+          {PREFIX_SIZE.toLocaleString()} after — roughly a hundred days of issuing.
         </p>
       </div>
 
@@ -44,6 +52,8 @@ export default async function GapsPage() {
         <p className="mt-3 max-w-prose text-xs text-ink-faint">
           Filled squares are prefixes you have logged. Outlined squares fall between your earliest
           and latest plate and are still empty. Faint squares are outside that run altogether.
+          Blank spaces were never issued: Vermont did not use V or Z until late 2023, so the
+          sequence stepped over them.
         </p>
       </Section>
 
@@ -85,12 +95,12 @@ export default async function GapsPage() {
                   {run.blocks === 1 ? (
                     <>
                       Nothing in {run.from} — one prefix block, about{' '}
-                      {PREFIX_SIZE.toLocaleString()} plates.
+                      {run.plates.toLocaleString()} plates.
                     </>
                   ) : (
                     <>
                       Nothing from {run.from} through {run.to} — {run.blocks} prefix blocks, about{' '}
-                      {(run.blocks * PREFIX_SIZE).toLocaleString()} plates.
+                      {run.plates.toLocaleString()} plates.
                     </>
                   )}
                 </li>

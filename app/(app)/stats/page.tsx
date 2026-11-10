@@ -104,7 +104,7 @@ export default async function StatsPage() {
 
       <Section
         title="By first letter"
-        description="All 22 letters Vermont issues. The empty ones are the point — they show how narrow the collection still is."
+        description="All 21 letters Vermont issues. The empty ones are the point — they show how narrow the collection still is."
       >
         <FirstLetterChart data={letters} />
       </Section>

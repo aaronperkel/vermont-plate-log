@@ -31,7 +31,7 @@ export const sightings = sqliteTable(
      * Denormalised from toOrdinal(). The collection sorts by this and the gaps
      * view scans ranges over it, neither of which SQL can derive: sorting the
      * plate string lexically orders over all 26 ASCII letters, while Vermont's
-     * sequence runs through 22. lib/plate.ts remains the source of truth; this
+     * sequence runs through 21. lib/plate.ts remains the source of truth; this
      * column is written on insert and never edited by hand.
      */
     ordinal: integer('ordinal').notNull(),

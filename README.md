@@ -21,22 +21,22 @@ before it existed.
 ### Vermont skips letters, and it started skipping fewer of them in 2023
 
 `I`, `J`, `O` and `Q` have never appeared in the sequence. `I` and `O` read as `1` and `0`, and
-`Q` reads as `O`. That leaves 22 usable letters.
+`Q` reads as `O`. `U` is skipped too — see below. That leaves 21 usable letters.
 
-`U`, `V` and `Z` are recent. They were dormant for the first three decades of the series and
-Vermont activated them in **late 2023**, which is why `lib/plate.ts` carries two alphabets:
+`V` and `Z` are recent. They were dormant for the first three decades of the series and Vermont
+activated them in **late 2023**, which is why `lib/plate.ts` carries two alphabets:
 
 ```ts
-ALPHABET        = 'ABCDEFGHKLMNPRSTUVWXYZ'   // 22, today
+ALPHABET        = 'ABCDEFGHKLMNPRSTVWXYZ'    // 21, today
 LEGACY_ALPHABET = 'ABCDEFGHKLMNPRSTWXY'      // 19, before the activation
 ```
 
-The critical detail — and the reason half this file exists — is that the three new letters were
-**slotted into alphabetical order rather than appended to the end**. `U` sits between `T` and
+The critical detail — and the reason half this file exists — is that the two new letters were
+**slotted into alphabetical order rather than appended to the end**. `V` sits between `T` and
 `W`; `Z` sits after `Y`.
 
-So `AAU 001` computes to ordinal 15,985, right at the start of the sequence, and yet it cannot
-have been issued before late 2023, because `U` did not exist in the sequence when the `AA` block
+So `AAV 001` computes to ordinal 16,002, right at the start of the sequence, and yet it cannot
+have been issued before late 2023, because `V` did not exist in the sequence when the `AA` block
 was being stamped in the early nineties. Its ordinal is not merely imprecise; it is meaningless.
 
 `estimateIssuanceEra` reports that case as `contradictory` and refuses to give a date beyond
@@ -45,20 +45,20 @@ away, this is the paragraph that says it isn't.**
 
 ### There are two ordinal functions, and that is deliberate
 
-- `toOrdinal` counts in the modern 22-letter sequence. It is the canonical sort key and the value
+- `toOrdinal` counts in the modern 21-letter sequence. It is the canonical sort key and the value
   stored on every sighting.
 - `toLegacyOrdinal` counts in the 19-letter sequence and returns `null` for any plate containing
-  `U`, `V` or `Z`.
+  `V` or `Z`.
 
 For a plate issued before 2023, the modern ordinal **overcounts the past**, because it includes
-`U`/`V`/`Z` blocks that were skipped at the time and never issued at all. The drift is large:
+`V`/`Z` blocks that were skipped at the time and never issued at all. The drift is large:
 
 ```
-KPA 001    modern 4,131,865    legacy 3,112,885    ~1.02M plates that never existed
+KPA 001    modern 3,780,002    legacy 3,116,002    ~664,000 plates that never existed
 ```
 
 Extrapolating backwards from the observed rate in modern space dates the start of the series to
-roughly 1969. In legacy space, roughly 1983. The series actually began **1 January 1990**. Both
+roughly 1966. In legacy space, roughly 1976. The series actually began **1 January 1990**. Both
 are wrong, which is the point — but legacy space is the less wrong of the two, so that is what
 the backwards estimate uses.
 
@@ -72,7 +72,7 @@ sequence had reached:
 | `KPZ` | late 2023  | `KPZ 451` seen, with the `KPV` series also circulating |
 | `LAX` | Sept 2026  | the `LAX` block was current; digits not recorded       |
 
-Between them, the sequence advanced about **210 plates a day**, or roughly 77,000 a year. Every
+Between them, the sequence advanced about **180 plates a day**, or roughly 66,000 a year. Every
 estimate in the app is that one number applied to a distance.
 
 **Anchors are blocks, not plates.** What actually gets confirmed in the wild is which block the
@@ -89,7 +89,7 @@ The four confidence levels a plate can come back with:
 | `interpolated`  | between two anchors                      | Good to a few months |
 | `projected`     | past the newest anchor                   | Softens with distance |
 | `speculative`   | before the oldest anchor                 | Decade is a hint, year is noise |
-| `contradictory` | early ordinal, but contains `U`/`V`/`Z`  | Only "after late 2023" is knowable |
+| `contradictory` | early ordinal, but contains `V`/`Z`      | Only "after late 2023" is knowable |
 
 **Adding an anchor tightens everything automatically.** `ANCHORS` is an ordered array and the
 estimator brackets against the nearest pair, so appending a new confirmed block improves every
@@ -116,15 +116,24 @@ estimate near it without touching the estimator. Only put first-hand observation
   reservations and administrative buffers, so the difference between two ordinals overstates the
   number of plates actually issued between them. The derived daily rate absorbs this, but any
   reasoning about exact counts should not.
-- **Wikipedia disagrees about `U`.** It currently claims `U` is still unused and dates the `V`/`Z`
-  activation to January 2024 rather than late 2023. This app follows first-hand observation.
-  `ALPHABET` is a single exported constant, so correcting it is a one-line change — but be aware
-  that doing so **changes every ordinal already stored in the database**, and the `ordinal` column
-  would need rewriting from `toOrdinal`.
+- **`U` is not in the alphabet, though one source says it should be.** licenseplates.cc reports
+  `U`, `V` and `Z` activated together in late 2023, but its evidence is a `V` block and a `Z`
+  block. Wikipedia says `U` is still unused. This app took the first view until November 2026,
+  when it was clear the log had `V` and `Z` as second and third letters and not a single `U` in
+  any position — across a stretch of sequence where about one plate in eight would carry one if it
+  were in use. Wikipedia does still date the activation to January 2024; this app keeps late 2023,
+  from first-hand observation. If a `U` plate is ever confirmed, put the letter back in
+  `ALPHABET` between `T` and `V` and let a deploy run the backfill, because **every stored ordinal
+  moves**. The `U` words removed from `lib/notable.ts` are listed there to restore.
+- **Gaps skips prefixes that were never issued.** The grid is 21 × 21, but before the activation
+  only 19 × 19 of those prefixes existed, so pre-2023 prefixes containing `V` or `Z` are blank,
+  never counted as gaps, and never split a run. A prefix is 19,000 plates before the activation
+  and 21,000 from it on; `blocksInPrefix` in `lib/plate.ts` decides which.
 - **Some notable combinations can never be found.** States run blocklists against sequential
   issuance. Entries in `lib/notable.ts` flagged `theoretical` are tracked as unstampable rather
   than as "not yet spotted". Separately, `SQL`, `API` and `LOL` are absent because they contain
-  `Q`, `I` and `O` — a test enforces that every entry is a combination Vermont can actually issue.
+  `Q`, `I` and `O`, as are `UVM` and every other `U` word — a test enforces that every entry is a
+  combination Vermont can actually issue.
 
 ---
 
@@ -176,7 +185,7 @@ than from anything the form sends. The log screen has no way to pick a person.
 ### The `ordinal` column
 
 Denormalised from `toOrdinal` on insert. SQL cannot derive it — sorting the plate string
-lexically orders over all 26 ASCII letters while Vermont's sequence runs through 22 — and both
+lexically orders over all 26 ASCII letters while Vermont's sequence runs through 21 — and both
 the collection ordering and the gaps view's range scans need it. `lib/plate.ts` stays the source
 of truth; nothing writes that column by hand.
 

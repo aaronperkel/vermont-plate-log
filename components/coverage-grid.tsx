@@ -1,28 +1,47 @@
-import { ALPHABET, BLOCK_SIZE, toOrdinal } from '@/lib/plate';
+import { ALPHABET, BLOCK_SIZE, LEGACY_ALPHABET, blocksInPrefix, toOrdinal } from '@/lib/plate';
 
 /*
- * Collection coverage as a 22 by 22 grid of two-letter prefixes: first letter
+ * Collection coverage as a 21 by 21 grid of two-letter prefixes: first letter
  * down the side, second across the top.
  *
- * Two letters, not three. A three-letter grid would be 10,648 cells and would
+ * Two letters, not three. A three-letter grid would be 9,261 cells and would
  * grow unboundedly with the span between your oldest and newest plate; this one
- * is always 484 cells whatever gets logged, and a prefix block is a meaningful
- * unit — about 22,000 plates, which is a hundred days of issuing.
+ * is always 441 cells whatever gets logged, and a prefix block is a meaningful
+ * unit — about 20,000 plates, which is a hundred days of issuing.
+ *
+ * Not every cell is a prefix Vermont issued. Before late 2023 the sequence ran
+ * through 19 letters, so the earlier prefixes containing V or Z were stepped
+ * over and are left blank rather than counted as gaps — see blocksInPrefix.
+ * The same is why a prefix is 19,000 plates on one side of the activation and
+ * 21,000 on the other.
  *
  * One hue at two strengths rather than a colour scale. A cell is either inside
  * the run you have covered or outside it, and that is the whole message.
  */
 
+/** Plates under a prefix on each side of the activation. */
+export const LEGACY_PREFIX_SIZE = LEGACY_ALPHABET.length * BLOCK_SIZE;
 export const PREFIX_SIZE = ALPHABET.length * BLOCK_SIZE;
+
+/** Plates Vermont actually issued under a prefix; zero for one it skipped. */
+export function platesInPrefix(prefix: string): number {
+  return blocksInPrefix(prefix) * BLOCK_SIZE;
+}
 
 export function prefixRange(prefix: string): [number, number] {
   return [toOrdinal(`${prefix}${ALPHABET[0]}000`), toOrdinal(`${prefix}${ALPHABET[ALPHABET.length - 1]}999`)];
 }
 
+/** Every cell in the grid, issued or not. */
 export function allPrefixes(): string[] {
   const out: string[] = [];
   for (const first of ALPHABET) for (const second of ALPHABET) out.push(`${first}${second}`);
   return out;
+}
+
+/** The prefixes Vermont has issued or will issue, in sequence order. */
+export function issuedPrefixes(): string[] {
+  return allPrefixes().filter((prefix) => blocksInPrefix(prefix) > 0);
 }
 
 export function CoverageGrid({
@@ -58,14 +77,17 @@ export function CoverageGrid({
               {[...ALPHABET].map((second) => {
                 const prefix = `${first}${second}`;
                 const count = counts.get(prefix) ?? 0;
+                const issued = blocksInPrefix(prefix) > 0;
                 const [low, high] = prefixRange(prefix);
                 const inSpan = span !== null && high >= span[0] && low <= span[1];
 
                 const style = count
                   ? 'bg-plate-green border-plate-green'
-                  : inSpan
-                    ? 'border-plate-green/40'
-                    : 'border-rule/60';
+                  : !issued
+                    ? 'border-transparent'
+                    : inSpan
+                      ? 'border-plate-green/40'
+                      : 'border-rule/60';
 
                 return (
                   <td key={prefix} className="p-0">
@@ -74,9 +96,11 @@ export function CoverageGrid({
                       title={
                         count
                           ? `${prefix} — ${count} logged`
-                          : inSpan
-                            ? `${prefix} — inside your run, nothing logged`
-                            : `${prefix} — outside your run`
+                          : !issued
+                            ? `${prefix} — never issued, the sequence passed it before V and Z were in use`
+                            : inSpan
+                              ? `${prefix} — inside your run, nothing logged`
+                              : `${prefix} — outside your run`
                       }
                     />
                   </td>
@@ -90,25 +114,32 @@ export function CoverageGrid({
   );
 }
 
-export type Run = { from: string; to: string; blocks: number };
+export type Run = { from: string; to: string; blocks: number; plates: number };
 
-/** Consecutive unseen prefixes inside the covered span, as runs. */
+/*
+ * Consecutive unseen prefixes inside the covered span, as runs, largest first.
+ *
+ * Walks issued prefixes only. A skipped prefix is not a gap, and it does not
+ * break one either: AT and AW are neighbours in the sequence that was actually
+ * stamped, so an empty AT and an empty AW are one run of two.
+ */
 export function unseenRuns(counts: Map<string, number>, span: [number, number] | null): Run[] {
   if (!span) return [];
 
   const runs: Run[] = [];
   let open: Run | null = null;
 
-  for (const prefix of allPrefixes()) {
+  for (const prefix of issuedPrefixes()) {
     const [low, high] = prefixRange(prefix);
     const inSpan = high >= span[0] && low <= span[1];
     const seen = (counts.get(prefix) ?? 0) > 0;
+    const plates = platesInPrefix(prefix);
 
     if (inSpan && !seen) {
       open =
         open === null
-          ? { from: prefix, to: prefix, blocks: 1 }
-          : { from: open.from, to: prefix, blocks: open.blocks + 1 };
+          ? { from: prefix, to: prefix, blocks: 1, plates }
+          : { from: open.from, to: prefix, blocks: open.blocks + 1, plates: open.plates + plates };
     } else if (open) {
       runs.push(open);
       open = null;
@@ -116,5 +147,5 @@ export function unseenRuns(counts: Map<string, number>, span: [number, number] |
   }
   if (open) runs.push(open);
 
-  return runs.sort((a, b) => b.blocks - a.blocks);
+  return runs.sort((a, b) => b.plates - a.plates);
 }

@@ -6,7 +6,7 @@
  * and would still miss the ones that actually matter locally. Adding an entry is
  * one line; that is the intended way to grow this.
  *
- * Every key must be three letters drawn from the 22 Vermont issues, which rules
+ * Every key must be three letters drawn from the 21 Vermont issues, which rules
  * out a lot of the obvious candidates — LOL, API, JFK, SFO, BOS, ORD, FYI, IDK,
  * GIT and ZIP all contain a letter that has never appeared on a Vermont plate.
  * A test in notable.test.ts enforces this against ALPHABET, because a typo here
@@ -16,6 +16,11 @@
  * that reason and should not be re-added: SQL (Q), API (I) and LOL (O). They
  * are not oversights and they are not "not yet found" — Vermont has no way to
  * stamp them.
+ *
+ * The same goes for anything with a U, which Vermont skips: UVM, USA, UPS, USB,
+ * CPU, GPU, SUS, MUD, EMU, PUP, BUG, HUG, RUT and YUL were all here until the
+ * log made it clear the letter is not in use. See ALPHABET in lib/plate.ts. If
+ * a U plate is ever confirmed, they can come back.
  */
 
 export type NotableCategory = 'airport' | 'tech' | 'slang' | 'initials' | 'other';
@@ -42,8 +47,6 @@ export const NOTABLE: Record<string, Notable> = {
   // actually have a reason to care about.
   BTV: { label: 'Burlington', category: 'airport' },
   MPV: { label: 'Montpelier', category: 'airport' },
-  RUT: { label: 'Rutland', category: 'airport' },
-  YUL: { label: 'Montréal', category: 'airport' },
   ALB: { label: 'Albany', category: 'airport' },
   PWM: { label: 'Portland, Maine', category: 'airport' },
   MHT: { label: 'Manchester', category: 'airport' },
@@ -77,10 +80,7 @@ export const NOTABLE: Record<string, Notable> = {
   VPN: { label: 'Virtual private network', category: 'tech' },
   CDN: { label: 'Content delivery network', category: 'tech' },
   TCP: { label: 'The protocol underneath everything', category: 'tech' },
-  CPU: { label: 'Processor', category: 'tech' },
-  GPU: { label: 'Graphics card', category: 'tech' },
   SSD: { label: 'Solid-state drive', category: 'tech' },
-  USB: { label: 'The cable that is always upside down', category: 'tech' },
   RAM: { label: 'Memory', category: 'tech' },
   LED: { label: 'Light-emitting diode', category: 'tech' },
   SDK: { label: 'Software development kit', category: 'tech' },
@@ -98,7 +98,6 @@ export const NOTABLE: Record<string, Notable> = {
   FTW: { label: 'For the win', category: 'slang' },
   LMK: { label: 'Let me know', category: 'slang' },
   THX: { label: 'Thanks', category: 'slang' },
-  SUS: { label: 'Suspicious', category: 'slang' },
   MEH: { label: 'Unimpressed', category: 'slang' },
   NAH: { label: 'No thank you', category: 'slang' },
   WTF: { label: 'What the…', category: 'slang', theoretical: true },
@@ -109,7 +108,6 @@ export const NOTABLE: Record<string, Notable> = {
   SEX: { label: 'Likewise', category: 'slang', theoretical: true },
 
   // ── Initials ──────────────────────────────────────────────────────────────
-  UVM: { label: 'University of Vermont', category: 'initials' },
   NEK: { label: 'Northeast Kingdom', category: 'initials' },
   GMC: { label: 'Green Mountain Club', category: 'initials' },
   VPR: { label: 'Vermont Public Radio', category: 'initials' },
@@ -126,16 +124,12 @@ export const NOTABLE: Record<string, Notable> = {
   NSA: { label: 'National Security Agency', category: 'initials' },
   EPA: { label: 'Environmental Protection Agency', category: 'initials' },
   FDA: { label: 'Food and Drug Administration', category: 'initials' },
-  UPS: { label: 'The brown truck', category: 'initials' },
   VHS: { label: 'Videotape', category: 'initials' },
   DVD: { label: 'The one after videotape', category: 'initials' },
-  USA: { label: 'The country', category: 'initials' },
 
   // ── Other words ───────────────────────────────────────────────────────────
   SAP: { label: 'What the maples give up in March', category: 'other' },
-  MUD: { label: 'Mud season', category: 'other' },
   ELK: { label: 'Large deer', category: 'other' },
-  EMU: { label: 'Large bird', category: 'other' },
   YAK: { label: 'Large cow', category: 'other' },
   AXE: { label: 'Axe', category: 'other' },
   FLY: { label: 'Fly', category: 'other' },
@@ -145,8 +139,6 @@ export const NOTABLE: Record<string, Notable> = {
   MAX: { label: 'Maximum', category: 'other' },
   CAT: { label: 'Cat', category: 'other' },
   BAT: { label: 'Bat', category: 'other' },
-  PUP: { label: 'Puppy', category: 'other' },
-  BUG: { label: 'Bug', category: 'other' },
   EGG: { label: 'Egg', category: 'other' },
   KEG: { label: 'Keg', category: 'other' },
   ELF: { label: 'Elf', category: 'other' },
@@ -159,7 +151,6 @@ export const NOTABLE: Record<string, Notable> = {
   TAX: { label: 'Tax', category: 'other' },
   FAX: { label: 'Fax', category: 'other' },
   WAX: { label: 'Wax', category: 'other' },
-  HUG: { label: 'Hug', category: 'other' },
 };
 
 /** The notable entry for a plate's letters, or null. Accepts a full plate or a block. */
