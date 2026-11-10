@@ -52,7 +52,7 @@ export default async function GapsPage() {
         <p className="mt-3 max-w-prose text-xs text-ink-faint">
           Filled squares are prefixes you have logged. Outlined squares fall between your earliest
           and latest plate and are still empty. Faint squares are outside that run altogether.
-          Grey squares don't exist: Vermont did not use V or Z until late 2023, so the sequence
+          Grey squares don&rsquo;t exist: Vermont did not use V or Z until late 2023, so the sequence
           stepped over them.
         </p>
       </Section>
