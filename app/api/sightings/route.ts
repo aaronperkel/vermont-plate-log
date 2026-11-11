@@ -4,6 +4,7 @@ import { jsonError, jsonOk, parseJsonBody, withErrorHandling } from '@/lib/api';
 import { currentSpotter } from '@/lib/auth';
 import { toOrdinal } from '@/lib/plate';
 import { findByPlate, listSightings } from '@/lib/queries/sightings';
+import { recordFor } from '@/lib/record';
 import { sightingCreateSchema } from '@/lib/validation';
 
 export async function GET() {
@@ -54,7 +55,14 @@ export async function POST(request: Request) {
         })
         .returning();
 
-      return jsonOk({ sighting: created }, 201);
+      /*
+       * Read after the insert rather than before, so two phones extending the
+       * same end at the same moment cannot both be told they hold it.
+       */
+      const others = (await listSightings()).filter((row) => row.id !== created.id);
+      const record = recordFor(plate, others.map((row) => row.plate));
+
+      return jsonOk({ sighting: created, record }, 201);
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : '';
       if (!message.includes('UNIQUE constraint failed')) throw error;

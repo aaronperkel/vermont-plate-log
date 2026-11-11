@@ -1,14 +1,16 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Plate } from '@/components/plate';
 import { SequenceLine } from '@/components/sequence-line';
 import { NotableBadge } from '@/components/notable-badge';
+import { fireConfetti } from '@/lib/confetti';
 import { clockTime, longDate, today } from '@/lib/dates';
 import { notableFor } from '@/lib/notable';
 import { ALPHABET, estimateIssuanceEra, format, parse, toOrdinal, validate } from '@/lib/plate';
+import { type SightingRecord } from '@/lib/record';
 import { type Sighting, type Spotter } from '@/db/schema';
 
 /*
@@ -28,11 +30,22 @@ import { type Sighting, type Spotter } from '@/db/schema';
 type Status =
   | { kind: 'idle' }
   | { kind: 'saving' }
-  | { kind: 'saved'; plate: string }
+  | { kind: 'saved'; plate: string; record: SightingRecord }
   | { kind: 'duplicate'; existing: Sighting }
   | { kind: 'error'; message: string };
 
 const SPOTTER_LABELS: Record<Spotter, string> = { aaron: 'Aaron', riley: 'Riley' };
+
+/*
+ * What the saved line adds when the plate extended the collection. The confetti
+ * says the same thing, but not to a screen reader and not under reduced motion,
+ * so the words have to carry it on their own.
+ */
+const RECORD_LINES: Record<NonNullable<SightingRecord>, string> = {
+  oldest: ' is in the log, and it is now the oldest plate in it.',
+  newest: ' is in the log, and it is now the newest plate in it.',
+  first: ' is in the log, the first plate in it.',
+};
 
 /*
  * The whole grammar of the field: six alphanumerics, upper case.
@@ -69,6 +82,7 @@ export function LogForm({ spotter }: { spotter: Spotter }) {
   const [spottedAt, setSpottedAt] = useState(today);
   const [location, setLocation] = useState('');
   const [status, setStatus] = useState<Status>({ kind: 'idle' });
+  const plateRef = useRef<HTMLDivElement>(null);
 
   const plate = parse(typed);
   const error = liveError(typed);
@@ -110,7 +124,9 @@ export function LogForm({ spotter }: { spotter: Spotter }) {
         return;
       }
 
-      setStatus({ kind: 'saved', plate });
+      const record: SightingRecord = body.record ?? null;
+      setStatus({ kind: 'saved', plate, record });
+      if (record) void fireConfetti(plateRef.current);
       setTyped('');
       setLocation('');
       router.refresh();
@@ -146,7 +162,7 @@ export function LogForm({ spotter }: { spotter: Spotter }) {
           rather than the wrapper because an outline follows the border radius of
           the element it is on, and only the plate knows its own radius.
         */}
-        <div className="relative">
+        <div ref={plateRef} className="relative">
           <input
             id="plate"
             value={typed}
@@ -264,7 +280,8 @@ export function LogForm({ spotter }: { spotter: Spotter }) {
       <div aria-live="polite">
         {status.kind === 'saved' && (
           <p className="text-sm text-ink-soft">
-            {format(status.plate)} is in the log.{' '}
+            {format(status.plate)}
+            {status.record ? RECORD_LINES[status.record] : ' is in the log.'}{' '}
             <Link href={`/plate/${status.plate}`} className="underline underline-offset-2">
               Open its page
             </Link>

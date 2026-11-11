@@ -98,9 +98,15 @@ The plate is the only place colour is spent. Nothing else casts a shadow and not
 meaningful corner radius, which is what keeps it reading as an object rather than a UI accent.
 Structure comes from hairline rules, not cards.
 
+One deliberate exception: pastel confetti (`lib/confetti.ts`) when a save makes a plate the
+oldest or newest in the collection, or the first. The server decides that in `lib/record.ts`
+and returns it as `record` on the POST; a contradictory plate never sets a record and is
+ignored when finding the current ends. The saved line says the same thing in words, because
+the confetti is skipped under reduced motion.
+
 Deliberately avoided, because they read as generated: tracked-out all-caps eyebrow labels,
 identical rounded cards with soft grey shadows, meta strings joined with middle dots, `→` in link
-text, monospace for small data labels, and entrance animations. Motion appears in exactly two
-places, both answering an action: confirming a save and revealing a duplicate.
+text, monospace for small data labels, and entrance animations. Motion appears in exactly three
+places, all answering an action: confirming a save, revealing a duplicate, and that confetti.
 
 Sentence case throughout. Numbers use `.tnum` for tabular figures rather than a monospace face.
